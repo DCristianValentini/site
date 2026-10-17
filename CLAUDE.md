@@ -20,8 +20,10 @@ está no histórico do git do `Projetos`.
   usando o JWT do usuário. **Não existem rotas `/api`** (Pages é estático).
 - **Formulário de contato**: `POST /rest/v1/leads` direto (política de INSERT apenas; honeypot `site`).
 - **Imagens do CMS**: convertidas a WebP no navegador (`lib/imagem-cliente.ts`) e enviadas ao bucket
-  público `site-midias` do Storage. **Prints de telas** (`public/telas/*.webp`) ficam no repositório
-  (não passam pelo Storage); referenciados por nome em `produtos.telas`.
+  público `site-midias` do Storage. **Prints de telas** ficam no mesmo bucket, pasta `telas/`
+  (`urlTela()` em `lib/cms-padroes.ts`); `produtos.telas` guarda só o nome do arquivo. Para trocar um
+  print: ponha o `.webp` (mesmo nome) em `telas-local/` (ignorada pelo git) e rode `node scripts/enviar-telas.mjs`
+  (precisa de `SUPABASE_SECRET_KEY` no `.env.local`); a troca vale sem novo deploy.
 - **Publicar**: o workflow `Publicar site` roda em push, 1x/dia (cron), manual e por
   `repository_dispatch` `publicar` (botão "Publicar o site" do painel; token fine-grained do GitHub
   guardado no navegador de quem edita). Edição no painel só aparece no site depois de publicar.
@@ -91,8 +93,7 @@ No painel, a edição de página é `/admin/paginas/editar?id=N` (query, não ro
 
 ## Convenções
 
-- Imagem: sempre WebP, arquivo (nunca base64). `<img>` simples não ganha `basePath`: use `urlMidia()` /
-  `urlTela()` (`lib/cms-padroes.ts`), que já prefixam.
+- Imagem: sempre WebP, arquivo (nunca base64), no Storage. Use `urlMidia()` / `urlTela()` (`lib/cms-padroes.ts`).
 - Links internos com `next/link` (prefixa `basePath`); evitar `<a href="/...">` cru.
 - Next 15 (não 14: CVE de bypass no middleware). Componentes de UI feitos à mão (`components/admin/ui.tsx`);
   não usar shadcn CLI.

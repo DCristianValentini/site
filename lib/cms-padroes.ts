@@ -73,11 +73,15 @@ export function montarConfig(rows: { chave: string; valor: unknown }[]): ConfigS
  * cai na rota antiga /midia (arquivos em disco).
  */
 /**
- * URL de uma tela do sistema (print real do console), guardada em public/telas. Plain <img> nao ganha
- * o basePath do Next, entao o prefixo do Pages de projeto (SITE_BASE_PATH) e posto aqui, no build.
+ * URL de uma tela do sistema (print real do console). Os prints moram no Storage do Supabase
+ * (bucket publico `site-midias`, pasta `telas/`): trocar um print = reenviar o arquivo com o mesmo
+ * nome (`node scripts/enviar-telas.mjs`), sem novo deploy. Sem a URL do Supabase no ambiente
+ * (dev sem .env), cai em /telas/<arquivo> de public/, com o prefixo do Pages (SITE_BASE_PATH).
  */
 export function urlTela(arquivo: string | null | undefined): string | null {
   if (!arquivo || !/^[a-z0-9._-]+$/i.test(arquivo)) return null;
+  const base = (process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || '').replace(/\/+$/, '');
+  if (base) return `${base}/storage/v1/object/public/site-midias/telas/${arquivo}`;
   return `${(process.env.SITE_BASE_PATH || '').replace(/\/+$/, '')}/telas/${arquivo}`;
 }
 

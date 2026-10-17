@@ -5,3 +5,4 @@ out
 .env
 tsconfig.tsbuildinfo
 next-env.d.ts
+telas-local
