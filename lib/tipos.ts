@@ -108,6 +108,8 @@ export interface Produto {
   nome: string;
   sigla: string | null;
   categoria: string | null;
+  linha: string | null;
+  area: string | null;
   tagline: string | null;
   resumo: string | null;
   descricao: string | null;

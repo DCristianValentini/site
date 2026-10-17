@@ -34,6 +34,8 @@ const CAMPOS: Campo[] = [
   { chave: 'slug', label: 'Endereço na URL', tipo: 'texto', ajuda: 'Vira /produtos/<endereço>. Mudar quebra links antigos.' },
   { chave: 'sigla', label: 'Sigla (até 8 caracteres)', tipo: 'texto', ajuda: 'Aparece no selo colorido dos cards.' },
   { chave: 'categoria', label: 'Categoria', tipo: 'texto', ajuda: 'Ex.: Gestão empresarial, Aplicativo Android.' },
+  { chave: 'linha', label: 'Linha', tipo: 'texto', ajuda: 'Agrupa na vitrine: Sistemas de gestão, Aplicativos ou Suíte Enterprise.' },
+  { chave: 'area', label: 'Área (só da suíte)', tipo: 'texto', ajuda: 'Ex.: Logística e Transporte. Produtos da mesma área ficam juntos, com o pacote da área.' },
   { chave: 'plataformas', label: 'Plataformas', tipo: 'texto', ajuda: 'Ex.: Web (navegador), Android (APK).' },
   { chave: 'cor', label: 'Cor do produto', tipo: 'cor', ajuda: 'Usada no selo, nos detalhes e no fechamento da página.' },
   { chave: 'tagline', label: 'Frase de efeito', tipo: 'texto', largo: true },
@@ -62,7 +64,7 @@ const CAMPOS: Campo[] = [
 
 function paraDados(p: Produto): Dados {
   return {
-    nome: p.nome, slug: p.slug, sigla: p.sigla ?? '', categoria: p.categoria ?? '',
+    nome: p.nome, slug: p.slug, sigla: p.sigla ?? '', categoria: p.categoria ?? '', linha: p.linha ?? '', area: p.area ?? '',
     plataformas: p.plataformas ?? '', cor: p.cor ?? '', tagline: p.tagline ?? '',
     resumo: p.resumo ?? '', descricao: p.descricao ?? '', imagem: p.imagem ?? '',
     destaque: !!p.destaque, ativo: !!p.ativo,
@@ -123,7 +125,7 @@ export function EditorProdutos({ iniciais }: { iniciais: Produto[] }) {
     try {
       const r = await cli.post<{ id: number; slug: string }>('/api/admin/produtos', { nome: novoNome.trim() });
       const novo: Produto = {
-        id: r.id, slug: r.slug, nome: novoNome.trim(), sigla: null, categoria: null, tagline: null,
+        id: r.id, slug: r.slug, nome: novoNome.trim(), sigla: null, categoria: null, linha: null, area: null, tagline: null,
         resumo: null, descricao: null, cor: null, imagem: null, plataformas: null,
         destaque: 0, ativo: 1, ordem: produtos.length + 1, seo_titulo: null, seo_descricao: null,
         recursos: [],

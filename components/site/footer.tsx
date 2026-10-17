@@ -63,17 +63,25 @@ export function Footer({ config, produtos }: { config: ConfigSite; produtos: Pro
         <div>
           <h3 className="etiqueta">Produtos</h3>
           <ul className="mt-4 space-y-2.5 text-[0.9rem]">
-            {produtos.map((p) => (
-              <li key={p.id}>
-                <Link
-                  href={`/produtos/${p.slug}`}
-                  className="transition-colors hover:text-[var(--sf-acento)]"
-                  style={{ color: 'var(--sf-texto-suave)' }}
-                >
-                  {p.nome}
-                </Link>
-              </li>
-            ))}
+            {/* destaque no rodape: sistemas de gestao e pacotes da suite; o resto fica no catalogo */}
+            {produtos
+              .filter((p) => p.linha === 'Sistemas de gestão' || p.slug.startsWith('pacote-'))
+              .map((p) => (
+                <li key={p.id}>
+                  <Link
+                    href={`/produtos/${p.slug}`}
+                    className="transition-colors hover:text-[var(--sf-acento)]"
+                    style={{ color: 'var(--sf-texto-suave)' }}
+                  >
+                    {p.nome}
+                  </Link>
+                </li>
+              ))}
+            <li>
+              <Link href="/produtos" className="font-medium transition-colors hover:text-[var(--sf-acento)]">
+                Todos os produtos →
+              </Link>
+            </li>
           </ul>
         </div>
 

@@ -80,7 +80,7 @@ async function produtoSalvar(id: number, b: Entrada) {
     metodo: 'PATCH', consulta: `id=eq.${id}`,
     corpo: {
       slug, nome,
-      sigla: texto(b.sigla, 8), categoria: texto(b.categoria, 60), tagline: texto(b.tagline, 200),
+      sigla: texto(b.sigla, 8), categoria: texto(b.categoria, 60), linha: texto(b.linha, 60), area: texto(b.area, 60), tagline: texto(b.tagline, 200),
       resumo: texto(b.resumo, 500),
       descricao: sanitizarHtml(typeof b.descricao === 'string' ? b.descricao : ''),
       cor: texto(b.cor, 20), imagem: texto(b.imagem, 255), plataformas: texto(b.plataformas, 160),

@@ -155,103 +155,143 @@ function Hero({ d, primeiro }: { d: Dados; primeiro: boolean }) {
   );
 }
 
+function ListaProdutos({ lst, cards }: { lst: Produto[]; cards: boolean }) {
+  return cards ? (
+      <div className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        {lst.map((p) => (
+          <Link
+            key={p.id}
+            href={`/produtos/${p.slug}`}
+            className="card group relative flex flex-col overflow-hidden p-7 transition-transform duration-300 hover:-translate-y-1"
+          >
+            <span
+              className="absolute inset-x-0 top-0 h-[3px] origin-left scale-x-0 transition-transform duration-500 group-hover:scale-x-100"
+              style={{ background: p.cor || 'var(--sf-acento)' }}
+            />
+            <div className="flex items-center justify-between">
+              <span
+                className="rounded-md px-2 py-1 font-mono text-[0.66rem] font-medium tracking-[0.14em]"
+                style={{ background: `${p.cor || '#FF7A2F'}1f`, color: p.cor || 'var(--sf-acento)' }}
+              >
+                {p.sigla || p.nome.slice(0, 3).toUpperCase()}
+              </span>
+              <ArrowUpRight
+                size={17}
+                className="opacity-30 transition-all group-hover:translate-x-0.5 group-hover:opacity-100"
+              />
+            </div>
+            <h3 className="t-h3 mt-5">{p.nome}</h3>
+            {p.tagline && (
+              <p className="mt-2 text-[0.95rem] font-medium" style={{ color: p.cor || 'var(--sf-acento)' }}>
+                {p.tagline}
+              </p>
+            )}
+            {p.resumo && (
+              <p className="mt-3 flex-1 text-[0.92rem] leading-relaxed" style={{ color: 'var(--sf-texto-suave)' }}>
+                {p.resumo}
+              </p>
+            )}
+            <div
+              className="mt-6 flex items-center justify-between border-t pt-4 text-[0.78rem]"
+              style={{ borderColor: 'var(--sf-linha)', color: 'var(--sf-texto-suave)' }}
+            >
+              <span>{p.categoria}</span>
+              <span className="font-mono">{p.plataformas}</span>
+            </div>
+          </Link>
+        ))}
+      </div>
+  ) : (
+      <ul className="mt-12">
+        {lst.map((p, i) => (
+          <li key={p.id}>
+            <Link
+              href={`/produtos/${p.slug}`}
+              className="group grid grid-cols-[auto_1fr_auto] items-center gap-x-5 gap-y-2 border-t py-7 transition-colors sm:grid-cols-[auto_minmax(0,20ch)_1fr_auto] sm:gap-x-8"
+              style={{ borderColor: 'var(--sf-linha)' }}
+            >
+              <span
+                className="font-mono text-[0.8rem] tabular-nums transition-colors"
+                style={{ color: 'var(--sf-texto-suave)' }}
+              >
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <span className="t-h3 col-start-2 transition-transform duration-300 group-hover:translate-x-1">
+                {p.nome}
+              </span>
+              <span
+                className="col-span-2 col-start-2 text-[0.92rem] sm:col-span-1 sm:col-start-3"
+                style={{ color: 'var(--sf-texto-suave)' }}
+              >
+                {p.tagline || p.categoria}
+              </span>
+              <span
+                className="col-start-3 row-start-1 flex h-10 w-10 items-center justify-center rounded-full border transition-all duration-300 sm:col-start-4"
+                style={{ borderColor: 'var(--sf-linha)' }}
+              >
+                <ArrowUpRight
+                  size={16}
+                  className="transition-transform duration-300 group-hover:rotate-45"
+                  style={{ color: p.cor || 'var(--sf-acento)' }}
+                />
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+  );
+}
+
 function BlocoProdutos({ d, produtos }: { d: Dados; produtos: Produto[] }) {
   let lst = produtos;
+  const linha = s(d, 'linha').trim();
+  if (linha) lst = lst.filter((p) => p.linha === linha);
   if (b(d, 'so_destaques')) lst = lst.filter((p) => p.destaque);
   const lim = n(d, 'limite');
   if (lim > 0) lst = lst.slice(0, lim);
   if (!lst.length) return null;
 
   const cards = s(d, 'estilo') === 'cards';
+  const agrupar = b(d, 'agrupar');
+  // grupos na ordem em que aparecem: linha e, dentro dela, area (so a suite tem area)
+  const grupos: { linha: string; areas: { area: string; itens: Produto[] }[] }[] = [];
+  if (agrupar) {
+    for (const p of lst) {
+      const nl = p.linha ?? '';
+      const na = p.area ?? '';
+      let g = grupos.find((x) => x.linha === nl);
+      if (!g) grupos.push((g = { linha: nl, areas: [] }));
+      let ar = g.areas.find((x) => x.area === na);
+      if (!ar) g.areas.push((ar = { area: na, itens: [] }));
+      ar.itens.push(p);
+    }
+  }
 
   return (
     <section className="secao">
       <div className="limite">
         <CabecalhoSecao eyebrow={s(d, 'eyebrow')} titulo={s(d, 'titulo')} subtitulo={s(d, 'subtitulo')} />
 
-        {cards ? (
-          <div className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {lst.map((p) => (
-              <Link
-                key={p.id}
-                href={`/produtos/${p.slug}`}
-                className="card group relative flex flex-col overflow-hidden p-7 transition-transform duration-300 hover:-translate-y-1"
-              >
-                <span
-                  className="absolute inset-x-0 top-0 h-[3px] origin-left scale-x-0 transition-transform duration-500 group-hover:scale-x-100"
-                  style={{ background: p.cor || 'var(--sf-acento)' }}
-                />
-                <div className="flex items-center justify-between">
-                  <span
-                    className="rounded-md px-2 py-1 font-mono text-[0.66rem] font-medium tracking-[0.14em]"
-                    style={{ background: `${p.cor || '#FF7A2F'}1f`, color: p.cor || 'var(--sf-acento)' }}
-                  >
-                    {p.sigla || p.nome.slice(0, 3).toUpperCase()}
-                  </span>
-                  <ArrowUpRight
-                    size={17}
-                    className="opacity-30 transition-all group-hover:translate-x-0.5 group-hover:opacity-100"
-                  />
-                </div>
-                <h3 className="t-h3 mt-5">{p.nome}</h3>
-                {p.tagline && (
-                  <p className="mt-2 text-[0.95rem] font-medium" style={{ color: p.cor || 'var(--sf-acento)' }}>
-                    {p.tagline}
-                  </p>
-                )}
-                {p.resumo && (
-                  <p className="mt-3 flex-1 text-[0.92rem] leading-relaxed" style={{ color: 'var(--sf-texto-suave)' }}>
-                    {p.resumo}
-                  </p>
-                )}
-                <div
-                  className="mt-6 flex items-center justify-between border-t pt-4 text-[0.78rem]"
-                  style={{ borderColor: 'var(--sf-linha)', color: 'var(--sf-texto-suave)' }}
-                >
-                  <span>{p.categoria}</span>
-                  <span className="font-mono">{p.plataformas}</span>
-                </div>
-              </Link>
+        {agrupar ? (
+          <div className="mt-12 space-y-16">
+            {grupos.map((g) => (
+              <div key={g.linha}>
+                {g.linha && <h3 className="t-h2">{g.linha}</h3>}
+                {g.areas.map((ar) => (
+                  <div key={ar.area} className="mt-8">
+                    {ar.area && (
+                      <h4 className="etiqueta mb-2" style={{ color: 'var(--sf-texto-suave)' }}>
+                        {ar.area}
+                      </h4>
+                    )}
+                    <ListaProdutos lst={ar.itens} cards={cards} />
+                  </div>
+                ))}
+              </div>
             ))}
           </div>
         ) : (
-          <ul className="mt-12">
-            {lst.map((p, i) => (
-              <li key={p.id}>
-                <Link
-                  href={`/produtos/${p.slug}`}
-                  className="group grid grid-cols-[auto_1fr_auto] items-center gap-x-5 gap-y-2 border-t py-7 transition-colors sm:grid-cols-[auto_minmax(0,20ch)_1fr_auto] sm:gap-x-8"
-                  style={{ borderColor: 'var(--sf-linha)' }}
-                >
-                  <span
-                    className="font-mono text-[0.8rem] tabular-nums transition-colors"
-                    style={{ color: 'var(--sf-texto-suave)' }}
-                  >
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
-                  <span className="t-h3 col-start-2 transition-transform duration-300 group-hover:translate-x-1">
-                    {p.nome}
-                  </span>
-                  <span
-                    className="col-span-2 col-start-2 text-[0.92rem] sm:col-span-1 sm:col-start-3"
-                    style={{ color: 'var(--sf-texto-suave)' }}
-                  >
-                    {p.tagline || p.categoria}
-                  </span>
-                  <span
-                    className="col-start-3 row-start-1 flex h-10 w-10 items-center justify-center rounded-full border transition-all duration-300 sm:col-start-4"
-                    style={{ borderColor: 'var(--sf-linha)' }}
-                  >
-                    <ArrowUpRight
-                      size={16}
-                      className="transition-transform duration-300 group-hover:rotate-45"
-                      style={{ color: p.cor || 'var(--sf-acento)' }}
-                    />
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <ListaProdutos lst={lst} cards={cards} />
         )}
       </div>
     </section>

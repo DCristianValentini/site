@@ -40,7 +40,12 @@ export default async function ProdutoPage({ params }: { params: Promise<{ slug: 
   if (!produto || !produto.ativo) notFound();
 
   const todos = await getProdutos();
-  const outros = todos.filter((p) => p.id !== produto.id);
+  // "outros sistemas": os da mesma area (suite) ou da mesma linha, sem despejar o catalogo inteiro
+  const ehPacote = produto.slug.startsWith('pacote-');
+  const parentes = todos.filter(
+    (p) => p.id !== produto.id && (produto.area ? p.area === produto.area : p.linha === produto.linha),
+  );
+  const outros = ehPacote ? parentes.filter((p) => !p.slug.startsWith('pacote-')) : parentes.slice(0, 8);
   const cor = produto.cor || 'var(--sf-acento)';
   const imagem = urlMidia(produto.imagem);
 
@@ -201,7 +206,7 @@ export default async function ProdutoPage({ params }: { params: Promise<{ slug: 
       {outros.length > 0 && (
         <section className="secao" style={{ background: 'var(--sf-superficie)' }}>
           <div className="limite">
-            <h2 className="t-h2">Outros sistemas</h2>
+            <h2 className="t-h2">{ehPacote ? 'Sistemas deste pacote' : 'Outros sistemas'}</h2>
             <div className="mt-10 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
               {outros.map((p) => (
                 <Link

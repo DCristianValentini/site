@@ -152,10 +152,12 @@ export const TIPOS_BLOCO: TipoBloco[] = [
           { valor: 'cards', label: 'Cards' },
         ],
       },
+      { chave: 'linha', label: 'Mostrar só esta linha (vazio = todas)', tipo: 'texto', ajuda: 'Ex.: Sistemas de gestão, Aplicativos, Suíte Enterprise.' },
+      { chave: 'agrupar', label: 'Agrupar por linha (e por área, na suíte)', tipo: 'bool' },
       { chave: 'so_destaques', label: 'Mostrar só os produtos em destaque', tipo: 'bool' },
       { chave: 'limite', label: 'Máximo de produtos (0 = todos)', tipo: 'numero' },
     ],
-    padroes: { estilo: 'indice', so_destaques: false, limite: 0 },
+    padroes: { estilo: 'indice', linha: '', agrupar: false, so_destaques: false, limite: 0 },
   },
   {
     tipo: 'numeros',
