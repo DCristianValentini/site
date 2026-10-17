@@ -42,6 +42,20 @@ const CAMPOS: Campo[] = [
   { chave: 'resumo', label: 'Resumo (cards e busca)', tipo: 'textarea', largo: true },
   { chave: 'descricao', label: 'Texto de apresentação', tipo: 'rich', largo: true },
   { chave: 'imagem', label: 'Imagem ou print do produto', tipo: 'imagem', largo: true },
+  { chave: 'historia', label: 'Um dia de uso (história)', tipo: 'rich', largo: true, ajuda: 'Conte o dia de quem usa, em linguagem simples, com um exemplo concreto.' },
+  {
+    chave: 'telas',
+    label: 'Telas do sistema',
+    tipo: 'lista',
+    itemLabel: 'Tela',
+    largo: true,
+    ajuda: 'Prints reais. O arquivo fica em public/telas do projeto do site.',
+    itemCampos: [
+      { chave: 'arquivo', label: 'Arquivo (ex.: oms-1-pedidos.webp)', tipo: 'texto' },
+      { chave: 'titulo', label: 'Título', tipo: 'texto' },
+      { chave: 'texto', label: 'O que se faz nesta tela', tipo: 'textarea', largo: true },
+    ],
+  },
   { chave: 'como_acessa', label: 'Por onde se usa', tipo: 'texto', largo: true, ajuda: 'Uma frase. Ex.: Pelo console web, nas telas de pedidos e estoque, e por API.' },
   { chave: 'quem_usa', label: 'Quem usa', tipo: 'texto', largo: true, ajuda: 'Perfis que operam o produto no dia a dia.' },
   { chave: 'exemplo', label: 'Exemplo do dia a dia', tipo: 'textarea', largo: true, ajuda: 'Um cenário concreto que mostra o problema resolvido.' },
@@ -92,6 +106,8 @@ const CAMPOS: Campo[] = [
 function paraDados(p: Produto): Dados {
   return {
     nome: p.nome, slug: p.slug, sigla: p.sigla ?? '', categoria: p.categoria ?? '', linha: p.linha ?? '', area: p.area ?? '',
+    historia: p.historia ?? '',
+    telas: (p.telas ?? []).map((x) => ({ arquivo: x.arquivo, titulo: x.titulo, texto: x.texto })),
     como_acessa: p.como_acessa ?? '', quem_usa: p.quem_usa ?? '', exemplo: p.exemplo ?? '',
     passos: (p.passos ?? []).map((x) => ({ titulo: x.titulo, texto: x.texto })),
     integracoes: (p.integracoes ?? []).map((x) => ({ slug: x.slug, texto: x.texto })),

@@ -110,6 +110,8 @@ export interface Produto {
   categoria: string | null;
   linha: string | null;
   area: string | null;
+  historia?: string | null;
+  telas?: { arquivo: string; titulo: string; texto: string }[];
   como_acessa?: string | null;
   quem_usa?: string | null;
   exemplo?: string | null;

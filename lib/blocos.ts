@@ -160,6 +160,29 @@ export const TIPOS_BLOCO: TipoBloco[] = [
     padroes: { estilo: 'indice', linha: '', agrupar: false, so_destaques: false, limite: 0 },
   },
   {
+    tipo: 'telas',
+    nome: 'Telas do sistema (passo a passo)',
+    descricao: 'Prints reais do sistema, cada um com um texto explicando o que se faz ali.',
+    campos: [
+      cEyebrow,
+      cTitulo,
+      cSubtitulo,
+      {
+        chave: 'itens',
+        label: 'Telas',
+        tipo: 'lista',
+        itemLabel: 'Tela',
+        largo: true,
+        itemCampos: [
+          { chave: 'arquivo', label: 'Arquivo da imagem (em public/telas)', tipo: 'texto' },
+          { chave: 'titulo', label: 'Título', tipo: 'texto' },
+          { chave: 'texto', label: 'O que se faz nesta tela', tipo: 'textarea', largo: true },
+        ],
+      },
+    ],
+    padroes: { itens: [] },
+  },
+  {
     tipo: 'numeros',
     nome: 'Números',
     descricao: 'Faixa com métricas em destaque.',

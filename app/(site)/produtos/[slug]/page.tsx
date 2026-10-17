@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { ArrowLeft, ArrowRight, ArrowUpRight, Check } from 'lucide-react';
 import { getProduto, getProdutos, urlMidia } from '@/lib/cms';
 import { htmlParaTexto } from '@/lib/sanitize';
+import { GaleriaTelas } from '@/components/site/galeria-telas';
 
 export const dynamic = 'force-static';
 export const dynamicParams = false;
@@ -156,6 +157,41 @@ export default async function ProdutoPage({ params }: { params: Promise<{ slug: 
               <h2 className="t-h2 mt-5">O que esse sistema resolve</h2>
             </div>
             <div className="rico text-[1.02rem]" dangerouslySetInnerHTML={{ __html: produto.descricao }} />
+          </div>
+        </section>
+      )}
+
+      {/* ---------- um dia de uso (historia) ---------- */}
+      {produto.historia && (
+        <section className="secao" style={{ background: 'var(--sf-superficie)' }}>
+          <div className="limite grid gap-10 lg:grid-cols-[0.32fr_0.68fr]">
+            <div>
+              <div className="flex items-center gap-3">
+                <span className="h-px w-8" style={{ background: cor }} />
+                <span className="etiqueta">Na prática</span>
+              </div>
+              <h2 className="t-h2 mt-5">Um dia de uso</h2>
+            </div>
+            <div className="rico text-[1.02rem]" dangerouslySetInnerHTML={{ __html: produto.historia }} />
+          </div>
+        </section>
+      )}
+
+      {/* ---------- telas reais ---------- */}
+      {(produto.telas ?? []).length > 0 && (
+        <section className="secao">
+          <div className="limite">
+            <div className="flex items-center gap-3">
+              <span className="h-px w-8" style={{ background: cor }} />
+              <span className="etiqueta">Veja funcionando</span>
+            </div>
+            <h2 className="t-h2 mt-5 max-w-2xl">As telas que a sua equipe vai usar</h2>
+            <p className="mt-4 max-w-2xl text-[0.98rem]" style={{ color: 'var(--sf-texto-suave)' }}>
+              Prints reais do sistema, com dados de demonstração.
+            </p>
+            <div className="mt-12">
+              <GaleriaTelas telas={produto.telas ?? []} cor={produto.cor} />
+            </div>
           </div>
         </section>
       )}

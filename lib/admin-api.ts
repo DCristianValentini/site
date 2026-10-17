@@ -81,6 +81,10 @@ async function produtoSalvar(id: number, b: Entrada) {
     corpo: {
       slug, nome,
       sigla: texto(b.sigla, 8), categoria: texto(b.categoria, 60), linha: texto(b.linha, 60), area: texto(b.area, 60),
+      historia: sanitizarHtml(typeof b.historia === 'string' ? b.historia : ''),
+      telas: Array.isArray(b.telas)
+        ? (b.telas as Dados[]).slice(0, 30).map((x) => ({ arquivo: texto(x.arquivo, 120) ?? '', titulo: texto(x.titulo, 120) ?? '', texto: texto(x.texto, 500) ?? '' })).filter((x) => x.arquivo)
+        : [],
       como_acessa: texto(b.como_acessa, 400), quem_usa: texto(b.quem_usa, 300), exemplo: texto(b.exemplo, 900),
       passos: Array.isArray(b.passos)
         ? (b.passos as Dados[]).slice(0, 12).map((x) => ({ titulo: texto(x.titulo, 80) ?? '', texto: texto(x.texto, 500) ?? '' })).filter((x) => x.titulo)

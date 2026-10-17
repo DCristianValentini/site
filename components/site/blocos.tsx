@@ -7,6 +7,7 @@ import {
 import type { Bloco, ConfigSite, Dados, Plano, Produto } from '@/lib/tipos';
 import { urlMidia } from '@/lib/cms';
 import { FormContato } from './form-contato';
+import { GaleriaTelas } from './galeria-telas';
 
 /**
  * Renderizador dos blocos do CMS. O mapa `RENDER` liga o `tipo` gravado no banco
@@ -412,6 +413,21 @@ function LinhaTempo({ d }: { d: Dados }) {
   );
 }
 
+function Telas({ d }: { d: Dados }) {
+  const itens = lista(d, 'itens').map((it) => ({ arquivo: s(it, 'arquivo'), titulo: s(it, 'titulo'), texto: s(it, 'texto') }));
+  if (!itens.length) return null;
+  return (
+    <section className="secao">
+      <div className="limite">
+        <CabecalhoSecao eyebrow={s(d, 'eyebrow')} titulo={s(d, 'titulo')} subtitulo={s(d, 'subtitulo')} />
+        <div className="mt-12">
+          <GaleriaTelas telas={itens} />
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function Depoimentos({ d }: { d: Dados }) {
   const itens = lista(d, 'itens');
   if (!itens.length) return null;
@@ -742,6 +758,8 @@ export function RenderBlocos({
             return <Texto key={bl.id} d={d} />;
           case 'linha_tempo':
             return <LinhaTempo key={bl.id} d={d} />;
+          case 'telas':
+            return <Telas key={bl.id} d={d} />;
           case 'depoimentos':
             return <Depoimentos key={bl.id} d={d} />;
           case 'planos':
