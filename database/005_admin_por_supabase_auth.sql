@@ -1,0 +1,3 @@
+-- Referencia da migracao aplicada no Supabase (projeto "site"): painel autenticado pelo Supabase Auth.
+-- admins(user_id, papel) + private.eh_admin()/eh_papel_admin() + politicas admin_* em cada tabela
+-- + politicas site_midias_* no Storage. Veja o historico de migracoes do projeto para o texto completo.
