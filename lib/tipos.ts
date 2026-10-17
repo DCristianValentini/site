@@ -110,6 +110,11 @@ export interface Produto {
   categoria: string | null;
   linha: string | null;
   area: string | null;
+  como_acessa?: string | null;
+  quem_usa?: string | null;
+  exemplo?: string | null;
+  passos?: { titulo: string; texto: string }[];
+  integracoes?: { slug: string; texto: string }[];
   tagline: string | null;
   resumo: string | null;
   descricao: string | null;

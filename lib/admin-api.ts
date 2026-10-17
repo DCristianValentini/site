@@ -80,7 +80,15 @@ async function produtoSalvar(id: number, b: Entrada) {
     metodo: 'PATCH', consulta: `id=eq.${id}`,
     corpo: {
       slug, nome,
-      sigla: texto(b.sigla, 8), categoria: texto(b.categoria, 60), linha: texto(b.linha, 60), area: texto(b.area, 60), tagline: texto(b.tagline, 200),
+      sigla: texto(b.sigla, 8), categoria: texto(b.categoria, 60), linha: texto(b.linha, 60), area: texto(b.area, 60),
+      como_acessa: texto(b.como_acessa, 400), quem_usa: texto(b.quem_usa, 300), exemplo: texto(b.exemplo, 900),
+      passos: Array.isArray(b.passos)
+        ? (b.passos as Dados[]).slice(0, 12).map((x) => ({ titulo: texto(x.titulo, 80) ?? '', texto: texto(x.texto, 500) ?? '' })).filter((x) => x.titulo)
+        : [],
+      integracoes: Array.isArray(b.integracoes)
+        ? (b.integracoes as Dados[]).slice(0, 12).map((x) => ({ slug: texto(x.slug, 80) ?? '', texto: texto(x.texto, 400) ?? '' })).filter((x) => x.slug)
+        : [],
+      tagline: texto(b.tagline, 200),
       resumo: texto(b.resumo, 500),
       descricao: sanitizarHtml(typeof b.descricao === 'string' ? b.descricao : ''),
       cor: texto(b.cor, 20), imagem: texto(b.imagem, 255), plataformas: texto(b.plataformas, 160),

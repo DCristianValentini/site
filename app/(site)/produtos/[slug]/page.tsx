@@ -48,6 +48,9 @@ export default async function ProdutoPage({ params }: { params: Promise<{ slug: 
   const outros = ehPacote ? parentes.filter((p) => !p.slug.startsWith('pacote-')) : parentes.slice(0, 8);
   const cor = produto.cor || 'var(--sf-acento)';
   const imagem = urlMidia(produto.imagem);
+  const integracoes = (produto.integracoes ?? [])
+    .map((i) => ({ alvo: todos.find((p) => p.slug === i.slug), texto: i.texto }))
+    .filter((i): i is { alvo: (typeof todos)[number]; texto: string } => Boolean(i.alvo));
 
   // agrupa os recursos preservando a ordem de cadastro
   const grupos: { nome: string; itens: typeof produto.recursos }[] = [];
@@ -157,6 +160,64 @@ export default async function ProdutoPage({ params }: { params: Promise<{ slug: 
         </section>
       )}
 
+      {/* ---------- como se usa no dia a dia ---------- */}
+      {(produto.passos ?? []).length > 0 && (
+        <section className="secao">
+          <div className="limite grid gap-10 lg:grid-cols-[0.32fr_0.68fr]">
+            <div>
+              <div className="flex items-center gap-3">
+                <span className="h-px w-8" style={{ background: cor }} />
+                <span className="etiqueta">No dia a dia</span>
+              </div>
+              <h2 className="t-h2 mt-5">Como se usa</h2>
+              {(produto.quem_usa || produto.como_acessa) && (
+                <dl className="mt-6 space-y-4 text-[0.92rem]">
+                  {produto.quem_usa && (
+                    <div>
+                      <dt className="etiqueta">Quem usa</dt>
+                      <dd className="mt-1.5" style={{ color: 'var(--sf-texto-suave)' }}>{produto.quem_usa}</dd>
+                    </div>
+                  )}
+                  {produto.como_acessa && (
+                    <div>
+                      <dt className="etiqueta">Por onde</dt>
+                      <dd className="mt-1.5" style={{ color: 'var(--sf-texto-suave)' }}>{produto.como_acessa}</dd>
+                    </div>
+                  )}
+                </dl>
+              )}
+            </div>
+            <div>
+              <ol>
+                {(produto.passos ?? []).map((p, i) => (
+                  <li
+                    key={i}
+                    className="grid grid-cols-[2.2rem_1fr] gap-x-4 border-t py-5 first:border-t-0 first:pt-0"
+                    style={{ borderColor: 'var(--sf-linha)' }}
+                  >
+                    <span className="font-mono text-[0.8rem] tabular-nums" style={{ color: cor }}>
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    <div>
+                      <h3 className="text-[1.02rem] font-semibold tracking-tight">{p.titulo}</h3>
+                      <p className="mt-1.5 text-[0.94rem] leading-relaxed" style={{ color: 'var(--sf-texto-suave)' }}>
+                        {p.texto}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+              {produto.exemplo && (
+                <div className="card mt-8 p-6" style={{ background: 'var(--sf-superficie-2)' }}>
+                  <span className="etiqueta" style={{ color: cor }}>Exemplo</span>
+                  <p className="mt-2 text-[0.98rem] leading-relaxed">{produto.exemplo}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ---------- recursos por grupo ---------- */}
       {grupos.length > 0 && (
         <section className="secao">
@@ -196,6 +257,46 @@ export default async function ProdutoPage({ params }: { params: Promise<{ slug: 
                     ))}
                   </ul>
                 </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ---------- integracoes ---------- */}
+      {integracoes.length > 0 && (
+        <section className="secao" style={{ background: 'var(--sf-superficie)' }}>
+          <div className="limite">
+            <div className="flex items-center gap-3">
+              <span className="h-px w-8" style={{ background: cor }} />
+              <span className="etiqueta">Em conjunto</span>
+            </div>
+            <h2 className="t-h2 mt-5 max-w-2xl">Conversa com outros sistemas da suíte</h2>
+            <p className="mt-4 max-w-2xl text-[0.98rem]" style={{ color: 'var(--sf-texto-suave)' }}>
+              Cada sistema funciona sozinho. Quando você contrata mais de um, eles trocam estes dados sem digitação
+              duplicada.
+            </p>
+            <div className="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {integracoes.map(({ alvo, texto }) => (
+                <Link
+                  key={alvo.id}
+                  href={`/produtos/${alvo.slug}`}
+                  className="card group flex flex-col p-5 transition-transform duration-300 hover:-translate-y-1"
+                >
+                  <div className="flex items-center justify-between">
+                    <span
+                      className="rounded-md px-2 py-1 font-mono text-[0.64rem] tracking-[0.14em]"
+                      style={{ background: `${alvo.cor || '#FF7A2F'}1f`, color: alvo.cor || 'var(--sf-acento)' }}
+                    >
+                      {alvo.sigla || alvo.nome.slice(0, 3).toUpperCase()}
+                    </span>
+                    <ArrowUpRight size={15} className="opacity-30 transition-opacity group-hover:opacity-100" />
+                  </div>
+                  <h3 className="mt-3 text-[1rem] font-semibold tracking-tight">{alvo.nome}</h3>
+                  <p className="mt-2 text-[0.9rem] leading-relaxed" style={{ color: 'var(--sf-texto-suave)' }}>
+                    {texto}
+                  </p>
+                </Link>
               ))}
             </div>
           </div>

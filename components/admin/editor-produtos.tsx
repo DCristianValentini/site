@@ -42,6 +42,33 @@ const CAMPOS: Campo[] = [
   { chave: 'resumo', label: 'Resumo (cards e busca)', tipo: 'textarea', largo: true },
   { chave: 'descricao', label: 'Texto de apresentação', tipo: 'rich', largo: true },
   { chave: 'imagem', label: 'Imagem ou print do produto', tipo: 'imagem', largo: true },
+  { chave: 'como_acessa', label: 'Por onde se usa', tipo: 'texto', largo: true, ajuda: 'Uma frase. Ex.: Pelo console web, nas telas de pedidos e estoque, e por API.' },
+  { chave: 'quem_usa', label: 'Quem usa', tipo: 'texto', largo: true, ajuda: 'Perfis que operam o produto no dia a dia.' },
+  { chave: 'exemplo', label: 'Exemplo do dia a dia', tipo: 'textarea', largo: true, ajuda: 'Um cenário concreto que mostra o problema resolvido.' },
+  {
+    chave: 'passos',
+    label: 'Como se usa (passo a passo)',
+    tipo: 'lista',
+    itemLabel: 'Passo',
+    largo: true,
+    ajuda: 'Na ordem em que acontecem num ciclo real de uso.',
+    itemCampos: [
+      { chave: 'titulo', label: 'Título (começa com verbo)', tipo: 'texto' },
+      { chave: 'texto', label: 'O que a pessoa faz e o que o sistema garante', tipo: 'textarea', largo: true },
+    ],
+  },
+  {
+    chave: 'integracoes',
+    label: 'Conversa com outros sistemas',
+    tipo: 'lista',
+    itemLabel: 'Integração',
+    largo: true,
+    ajuda: 'Só integrações que existem. O endereço é o do outro produto (ex.: suite-oms).',
+    itemCampos: [
+      { chave: 'slug', label: 'Endereço do outro produto', tipo: 'texto' },
+      { chave: 'texto', label: 'O que passa de um para o outro', tipo: 'textarea', largo: true },
+    ],
+  },
   { chave: 'destaque', label: 'Em destaque', tipo: 'bool' },
   { chave: 'ativo', label: 'Ativo (aparece no site)', tipo: 'bool' },
   { chave: 'seo_titulo', label: 'Título no Google', tipo: 'texto', largo: true },
@@ -65,6 +92,9 @@ const CAMPOS: Campo[] = [
 function paraDados(p: Produto): Dados {
   return {
     nome: p.nome, slug: p.slug, sigla: p.sigla ?? '', categoria: p.categoria ?? '', linha: p.linha ?? '', area: p.area ?? '',
+    como_acessa: p.como_acessa ?? '', quem_usa: p.quem_usa ?? '', exemplo: p.exemplo ?? '',
+    passos: (p.passos ?? []).map((x) => ({ titulo: x.titulo, texto: x.texto })),
+    integracoes: (p.integracoes ?? []).map((x) => ({ slug: x.slug, texto: x.texto })),
     plataformas: p.plataformas ?? '', cor: p.cor ?? '', tagline: p.tagline ?? '',
     resumo: p.resumo ?? '', descricao: p.descricao ?? '', imagem: p.imagem ?? '',
     destaque: !!p.destaque, ativo: !!p.ativo,
