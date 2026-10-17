@@ -1,0 +1,379 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  As variaveis --sf-* sao SOBRESCRITAS em runtime pelo <style> que o
+  app/layout.tsx injeta com o tema gravado no banco (/admin/tema).
+  Os valores aqui sao apenas o fallback.
+*/
+:root {
+  --sf-fundo: #0a0b0e;
+  --sf-superficie: #14161c;
+  --sf-superficie-2: #1c1f27;
+  --sf-texto: #f1eee8;
+  --sf-texto-suave: #9a9ba6;
+  --sf-acento: #ff7a2f;
+  --sf-acento-texto: #150a03;
+  --sf-acento-2: #7fe7c4;
+  --sf-linha: rgba(255, 255, 255, 0.09);
+  --sf-raio: 14px;
+  --sf-largura: 1200px;
+
+  /* Escala tipografica fluida (padrao de responsividade do projeto) */
+  --t-hero: clamp(2.5rem, 6.6vw, 5.4rem);
+  --t-h2: clamp(1.85rem, 3.9vw, 3rem);
+  --t-h3: clamp(1.15rem, 1.9vw, 1.5rem);
+  --t-corpo: clamp(1rem, 1.05vw, 1.125rem);
+  --t-peq: clamp(0.8rem, 0.95vw, 0.875rem);
+  --t-micro: clamp(0.68rem, 0.8vw, 0.75rem);
+}
+
+* {
+  border-color: var(--sf-linha);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--sf-fundo);
+  color: var(--sf-texto);
+  font-family: var(--sf-fonte-corpo), ui-sans-serif, system-ui, sans-serif;
+  font-size: var(--t-corpo);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: var(--sf-acento);
+  color: var(--sf-acento-texto);
+}
+
+/* ---------- Grao: textura fina por cima de tudo ---------- */
+.grao::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---------- Grade tecnica de fundo ---------- */
+.grade-fundo {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    repeating-linear-gradient(to right, var(--sf-linha) 0 1px, transparent 1px 25%),
+    linear-gradient(to bottom, transparent, var(--sf-fundo) 85%);
+  mask-image: linear-gradient(to bottom, black, transparent 92%);
+  -webkit-mask-image: linear-gradient(to bottom, black, transparent 92%);
+}
+
+/* desligado em /admin/tema (tema.grade = 0) */
+.sem-grade .grade-fundo {
+  display: none;
+}
+
+/* ---------- Tipografia utilitaria ---------- */
+.t-hero {
+  font-family: var(--sf-fonte-display), ui-sans-serif, sans-serif;
+  font-size: var(--t-hero);
+  line-height: 0.95;
+  letter-spacing: -0.035em;
+  font-weight: 700;
+  text-wrap: balance;
+}
+
+.t-h2 {
+  font-family: var(--sf-fonte-display), ui-sans-serif, sans-serif;
+  font-size: var(--t-h2);
+  line-height: 1.03;
+  letter-spacing: -0.028em;
+  font-weight: 700;
+  text-wrap: balance;
+}
+
+.t-h3 {
+  font-family: var(--sf-fonte-display), ui-sans-serif, sans-serif;
+  font-size: var(--t-h3);
+  line-height: 1.2;
+  letter-spacing: -0.018em;
+  font-weight: 600;
+}
+
+.etiqueta {
+  font-family: var(--fonte-mono), ui-monospace, monospace;
+  font-size: var(--t-micro);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--sf-texto-suave);
+}
+
+.num-display {
+  font-family: var(--sf-fonte-display), sans-serif;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
+}
+
+/* ---------- Conteudo rico (rich text do CMS) ---------- */
+.rico > * + * {
+  margin-top: 1em;
+}
+.rico p {
+  color: var(--sf-texto-suave);
+}
+.rico strong,
+.rico b {
+  color: var(--sf-texto);
+  font-weight: 600;
+}
+.rico a {
+  color: var(--sf-acento);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.rico a:hover {
+  text-decoration-thickness: 2px;
+}
+.rico h2 {
+  font-family: var(--sf-fonte-display), sans-serif;
+  font-size: var(--t-h3);
+  color: var(--sf-texto);
+  letter-spacing: -0.02em;
+  margin-top: 1.6em;
+}
+.rico h3,
+.rico h4 {
+  font-family: var(--sf-fonte-display), sans-serif;
+  color: var(--sf-texto);
+  font-size: 1.05em;
+  margin-top: 1.4em;
+}
+.rico ul,
+.rico ol {
+  padding-left: 1.15rem;
+  color: var(--sf-texto-suave);
+}
+.rico ul {
+  list-style: none;
+  padding-left: 0;
+}
+.rico ul li {
+  position: relative;
+  padding-left: 1.15rem;
+}
+.rico ul li + li {
+  margin-top: 0.4em;
+}
+.rico ul li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.62em;
+  width: 6px;
+  height: 1px;
+  background: var(--sf-acento);
+}
+.rico ol {
+  list-style: decimal;
+}
+.rico ol li + li {
+  margin-top: 0.4em;
+}
+.rico blockquote {
+  border-left: 2px solid var(--sf-acento);
+  padding-left: 1rem;
+  color: var(--sf-texto);
+  font-style: italic;
+}
+.rico code {
+  font-family: var(--fonte-mono), monospace;
+  font-size: 0.9em;
+  background: var(--sf-superficie-2);
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+}
+
+/* ---------- Componentes do site ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 550;
+  font-size: var(--t-peq);
+  padding: 0.8rem 1.35rem;
+  border-radius: calc(var(--sf-raio) - 4px);
+  transition: transform 0.18s cubic-bezier(0.16, 0.84, 0.44, 1), background-color 0.18s,
+    border-color 0.18s, color 0.18s;
+  white-space: nowrap;
+}
+.btn:active {
+  transform: translateY(1px);
+}
+.btn-acento {
+  background: var(--sf-acento);
+  color: var(--sf-acento-texto);
+}
+.btn-acento:hover {
+  filter: brightness(1.08);
+}
+.btn-linha {
+  border: 1px solid var(--sf-linha);
+  color: var(--sf-texto);
+}
+.btn-linha:hover {
+  border-color: var(--sf-texto);
+  background: rgba(255, 255, 255, 0.04);
+}
+.btn-escuro {
+  background: var(--sf-fundo);
+  color: var(--sf-texto);
+  border: 1px solid var(--sf-fundo);
+}
+.btn-escuro:hover {
+  filter: brightness(1.25);
+}
+
+.card {
+  background: var(--sf-superficie);
+  border: 1px solid var(--sf-linha);
+  border-radius: var(--sf-raio);
+}
+
+.secao {
+  padding-block: clamp(3.5rem, 8vw, 7.5rem);
+}
+
+.limite {
+  width: 100%;
+  max-width: var(--sf-largura);
+  margin-inline: auto;
+  padding-inline: clamp(1.1rem, 4vw, 2.5rem);
+}
+
+/* linha fina animada que abre secoes */
+.risco {
+  height: 1px;
+  background: linear-gradient(to right, var(--sf-acento), transparent);
+  transform-origin: left;
+}
+
+/* ---------- Painel admin ---------- */
+.adm-campo {
+  width: 100%;
+  background: #12141a;
+  border: 1px solid #2a2f3a;
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+  color: #e8e9ed;
+  font-size: 0.9rem;
+  transition: border-color 0.15s;
+}
+.adm-campo:focus {
+  outline: none;
+  border-color: #5b8cff;
+}
+.adm-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #9ba1b0;
+  margin-bottom: 0.3rem;
+  letter-spacing: 0.01em;
+}
+.adm-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 10px;
+  padding: 0.55rem 0.95rem;
+  font-size: 0.86rem;
+  font-weight: 600;
+  transition: filter 0.15s, background-color 0.15s, border-color 0.15s;
+}
+.adm-btn-primario {
+  background: #5b8cff;
+  color: #08101f;
+}
+.adm-btn-primario:hover {
+  filter: brightness(1.1);
+}
+.adm-btn-linha {
+  border: 1px solid #2a2f3a;
+  color: #e8e9ed;
+}
+.adm-btn-linha:hover {
+  background: #1f232c;
+}
+.adm-btn-perigo {
+  border: 1px solid #4a2530;
+  color: #ff8fa3;
+}
+.adm-btn-perigo:hover {
+  background: #2a1620;
+}
+
+/* editor rich text do admin */
+.editor-rico {
+  min-height: 150px;
+  background: #12141a;
+  border: 1px solid #2a2f3a;
+  border-top: 0;
+  border-radius: 0 0 10px 10px;
+  padding: 0.75rem;
+  color: #e8e9ed;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  outline: none;
+  overflow-y: auto;
+  max-height: 460px;
+}
+.editor-rico:empty::before {
+  content: attr(data-vazio);
+  color: #5c6270;
+}
+.editor-rico a {
+  color: #7aa7ff;
+  text-decoration: underline;
+}
+.editor-rico ul {
+  list-style: disc;
+  padding-left: 1.3rem;
+}
+.editor-rico ol {
+  list-style: decimal;
+  padding-left: 1.3rem;
+}
+.editor-rico h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0.5rem 0;
+}
+.editor-rico h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0.4rem 0;
+}
+.editor-rico blockquote {
+  border-left: 3px solid #5b8cff;
+  padding-left: 0.75rem;
+  color: #9ba1b0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

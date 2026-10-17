@@ -1,0 +1,53 @@
+name: Publicar site
+
+# Gera o site estatico lendo o conteudo do Supabase e publica no GitHub Pages.
+# Roda: a cada push, uma vez por dia, manualmente (aba Actions) e quando o painel do site
+# pede "Publicar" (repository_dispatch, tipo "publicar").
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '17 9 * * *'
+  workflow_dispatch:
+  repository_dispatch:
+    types: [publicar]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  construir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+        env:
+          # PUBLICOS por natureza (vao no HTML); a RLS do Supabase limita o que leem.
+          NEXT_PUBLIC_SUPABASE_URL: https://sfcoluxbnbyhfedtuybw.supabase.co
+          NEXT_PUBLIC_SUPABASE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmY29sdXhibmJ5aGZlZHR1eWJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxOTEzNTYsImV4cCI6MjEwNzc2NzM1Nn0.D6xbVnX2PKAuyAOpjFYzP4meqoDrIO5FuGQY6jAKfpE
+          SITE_BASE_PATH: /${{ github.event.repository.name }}
+          SITE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: out
+
+  publicar:
+    needs: construir
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4
