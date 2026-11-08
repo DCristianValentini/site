@@ -1,3 +1,5 @@
+import { corLegivel } from '@/lib/cor-legivel';
+import { sanitizarHtml } from '@/lib/sanitize';
 import Link from 'next/link';
 import {
   ArrowRight, ArrowUpRight, Check, Minus, Layers, Shield, Zap, WifiOff, Smartphone, Server,
@@ -29,6 +31,10 @@ const n = (d: Dados, k: string): number => Number(d[k] ?? 0) || 0;
 const lista = (d: Dados, k: string): Dados[] => (Array.isArray(d[k]) ? (d[k] as Dados[]) : []);
 
 /** "texto com [[destaque]]" -> destaque na cor de acento. */
+// Nivel dos titulos de ITEM dentro de um bloco: h3 quando o bloco tem titulo de secao (h2); h2 quando
+// nao tem. Sem isso a pagina pula de h1 direto para h3 (leitor de tela perde a hierarquia).
+const nivelItem = (d: Dados) => (s(d, 'titulo') ? 'h3' : 'h2') as 'h2' | 'h3';
+
 function comDestaque(texto: string) {
   const partes = String(texto).split(/\[\[(.+?)\]\]/g);
   return partes.map((p, i) =>
@@ -44,7 +50,9 @@ function comDestaque(texto: string) {
 
 function Rico({ html, className = '' }: { html: string; className?: string }) {
   if (!html) return null;
-  return <div className={`rico ${className}`} dangerouslySetInnerHTML={{ __html: html }} />;
+  // sanitiza tambem na renderizacao: o filtro ao salvar roda no navegador do admin e nao protege o que ja
+  // estava gravado nem o que entrou direto pela API.
+  return <div className={`rico ${className}`} dangerouslySetInnerHTML={{ __html: sanitizarHtml(html) }} />;
 }
 
 function CabecalhoSecao({
@@ -172,7 +180,7 @@ function ListaProdutos({ lst, cards }: { lst: Produto[]; cards: boolean }) {
             <div className="flex items-center justify-between">
               <span
                 className="rounded-md px-2 py-1 font-mono text-[0.66rem] font-medium tracking-[0.14em]"
-                style={{ background: `${p.cor || '#FF7A2F'}1f`, color: p.cor || 'var(--sf-acento)' }}
+                style={{ background: `${p.cor || '#FF7A2F'}1f`, color: corLegivel(p.cor, { tinta: 0.12 }) ?? 'var(--sf-acento)' }}
               >
                 {p.sigla || p.nome.slice(0, 3).toUpperCase()}
               </span>
@@ -183,7 +191,7 @@ function ListaProdutos({ lst, cards }: { lst: Produto[]; cards: boolean }) {
             </div>
             <h3 className="t-h3 mt-5">{p.nome}</h3>
             {p.tagline && (
-              <p className="mt-2 text-[0.95rem] font-medium" style={{ color: p.cor || 'var(--sf-acento)' }}>
+              <p className="mt-2 text-[0.95rem] font-medium" style={{ color: corLegivel(p.cor) ?? 'var(--sf-acento)' }}>
                 {p.tagline}
               </p>
             )}
@@ -277,14 +285,13 @@ function BlocoProdutos({ d, produtos }: { d: Dados; produtos: Produto[] }) {
           <div className="mt-12 space-y-16">
             {grupos.map((g) => (
               <div key={g.linha}>
-                {g.linha && <h3 className="t-h2">{g.linha}</h3>}
+                {g.linha && (() => { const H = s(d, 'titulo') ? 'h3' : 'h2'; return <H className="t-h2">{g.linha}</H>; })()}
                 {g.areas.map((ar) => (
                   <div key={ar.area} className="mt-8">
-                    {ar.area && (
-                      <h4 className="etiqueta mb-2" style={{ color: 'var(--sf-texto-suave)' }}>
-                        {ar.area}
-                      </h4>
-                    )}
+                    {ar.area && (() => {
+                      const A = s(d, 'titulo') ? 'h4' : 'h3';
+                      return <A className="etiqueta mb-2" style={{ color: 'var(--sf-texto-suave)' }}>{ar.area}</A>;
+                    })()}
                     <ListaProdutos lst={ar.itens} cards={cards} />
                   </div>
                 ))}
@@ -320,7 +327,7 @@ function Recursos({ d }: { d: Dados }) {
                 >
                   <Icone size={18} style={{ color: 'var(--sf-acento)' }} />
                 </span>
-                <h3 className="mt-5 text-[1.05rem] font-semibold tracking-tight">{s(it, 'titulo')}</h3>
+                {(() => { const H = nivelItem(d); return <H className="mt-5 text-[1.05rem] font-semibold tracking-tight">{s(it, 'titulo')}</H>; })()}
                 <p className="mt-2 text-[0.93rem] leading-relaxed" style={{ color: 'var(--sf-texto-suave)' }}>
                   {s(it, 'descricao')}
                 </p>
@@ -342,15 +349,17 @@ function Numeros({ d }: { d: Dados }) {
         <CabecalhoSecao eyebrow={s(d, 'eyebrow')} titulo={s(d, 'titulo')} />
         <dl className="mt-10 grid gap-px overflow-hidden sm:grid-cols-2 lg:grid-cols-4" style={{ background: 'var(--sf-linha)' }}>
           {itens.map((it, i) => (
-            <div key={i} className="p-7" style={{ background: 'var(--sf-fundo)' }}>
+            // dt (o rotulo) vem ANTES do dd (o valor) no DOM, como a lista de definicao exige; o numero
+            // aparece em cima por causa do flex-col-reverse.
+            <div key={i} className="flex flex-col-reverse justify-end p-7" style={{ background: 'var(--sf-fundo)' }}>
+              <dt className="mt-3 text-[0.95rem] font-medium">{s(it, 'rotulo')}</dt>
               <dd className="num-display text-[clamp(2.6rem,5vw,3.8rem)] font-bold leading-none" style={{ color: 'var(--sf-acento)' }}>
                 {s(it, 'valor')}
               </dd>
-              <dt className="mt-3 text-[0.95rem] font-medium">{s(it, 'rotulo')}</dt>
               {s(it, 'detalhe') && (
-                <p className="mt-1 text-[0.82rem]" style={{ color: 'var(--sf-texto-suave)' }}>
+                <dd className="order-first mt-1 text-[0.82rem]" style={{ color: 'var(--sf-texto-suave)' }}>
                   {s(it, 'detalhe')}
-                </p>
+                </dd>
               )}
             </div>
           ))}
@@ -401,7 +410,7 @@ function LinhaTempo({ d }: { d: Dados }) {
               <span className="etiqueta" style={{ color: 'var(--sf-acento)' }}>
                 {s(it, 'ano')}
               </span>
-              <h3 className="t-h3 mt-2">{s(it, 'titulo')}</h3>
+              {(() => { const H = nivelItem(d); return <H className="t-h3 mt-2">{s(it, 'titulo')}</H>; })()}
               <p className="mt-2 max-w-2xl text-[0.95rem] leading-relaxed" style={{ color: 'var(--sf-texto-suave)' }}>
                 {s(it, 'descricao')}
               </p>
@@ -490,7 +499,7 @@ function Planos({ d, planos }: { d: Dados; planos: Plano[] }) {
                   MAIS ESCOLHIDO
                 </span>
               ) : null}
-              <h3 className="t-h3">{p.nome}</h3>
+              {(() => { const H = nivelItem(d); return <H className="t-h3">{p.nome}</H>; })()}
               {p.descricao && (
                 <p className="mt-2 text-[0.9rem] leading-relaxed" style={{ color: 'var(--sf-texto-suave)' }}>
                   {p.descricao}
@@ -512,7 +521,7 @@ function Planos({ d, planos }: { d: Dados; planos: Plano[] }) {
                     ) : (
                       <Minus size={15} className="mt-0.5 shrink-0 opacity-40" />
                     )}
-                    <span style={{ color: it.incluso ? 'var(--sf-texto)' : 'var(--sf-texto-suave)', opacity: it.incluso ? 1 : 0.65 }}>
+                    <span style={{ color: it.incluso ? 'var(--sf-texto)' : 'var(--sf-texto-suave)', opacity: it.incluso ? 1 : 0.85 }}>
                       {it.texto}
                     </span>
                   </li>

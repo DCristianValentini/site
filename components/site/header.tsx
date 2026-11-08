@@ -60,7 +60,7 @@ export function Header({
       }}
     >
       <div className="limite flex h-[68px] items-center justify-between gap-4">
-        <Link href="/" className="group flex shrink-0 items-center gap-2.5" aria-label={identidade.nome}>
+        <Link href="/" className="group flex shrink-0 items-center gap-2.5">
           {logoUrl ? (
             /* eslint-disable-next-line @next/next/no-img-element */
             <img src={logoUrl} alt={identidade.nome} className="h-8 w-auto" />
@@ -72,6 +72,9 @@ export function Header({
               {identidade.sigla || identidade.nome.slice(0, 2).toUpperCase()}
             </span>
           )}
+          {/* No celular so o logo/sigla aparece: o nome vem deste texto, que some quando o nome visivel
+              (abaixo) aparece. aria-label contradiria o texto visivel ("CV" x "Cristian Valentini"). */}
+          <span className="sr-only sm:hidden">{identidade.nome}</span>
           <span className="hidden text-[0.98rem] font-semibold tracking-tight sm:block">
             {identidade.nome}
           </span>

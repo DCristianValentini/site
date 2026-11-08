@@ -377,3 +377,27 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* Tela de toque (ponteiro "coarse"): alvo de pelo menos 44 px. O desktop (mouse) fica como esta.
+   Link de texto no cabecalho e no rodape vira uma linha de 44 px; link de texto no meio do conteudo
+   ganha a area de toque por preenchimento, que nao muda o layout (`lh` = altura da linha). */
+@media (pointer: coarse) {
+  button,
+  [role='button'] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  header a,
+  footer a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  a:has(> svg:only-child) {
+    min-width: 44px;
+    justify-content: center;
+  }
+  main a:not(.card):not(.btn):not([class*='card']) {
+    padding-block: max(0px, calc((48px - 1lh) / 2));
+  }
+}

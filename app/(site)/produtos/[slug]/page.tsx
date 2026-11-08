@@ -1,9 +1,11 @@
+import { descricaoSeo, tituloSeo } from '@/lib/seo';
+import { corLegivel } from '@/lib/cor-legivel';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, ArrowRight, ArrowUpRight, Check } from 'lucide-react';
 import { getProduto, getProdutos, urlMidia } from '@/lib/cms';
-import { htmlParaTexto } from '@/lib/sanitize';
+import { htmlParaTexto, sanitizarHtml } from '@/lib/sanitize';
 import { GaleriaTelas } from '@/components/site/galeria-telas';
 
 export const dynamic = 'force-static';
@@ -22,9 +24,9 @@ export async function generateMetadata({
   const { slug } = await params;
   const p = await getProduto(slug);
   if (!p) return {};
-  const desc = p.seo_descricao || p.resumo || htmlParaTexto(p.descricao, 300);
+  const desc = descricaoSeo(p.seo_descricao || p.resumo || htmlParaTexto(p.descricao, 300));
   return {
-    title: p.seo_titulo || `${p.nome} — ${p.tagline ?? p.categoria ?? ''}`.trim(),
+    title: tituloSeo({ seoTitulo: p.seo_titulo, nome: p.nome, complemento: p.tagline ?? p.categoria }),
     description: desc,
     alternates: { canonical: `/produtos/${p.slug}` },
     openGraph: {
@@ -156,7 +158,7 @@ export default async function ProdutoPage({ params }: { params: Promise<{ slug: 
               </div>
               <h2 className="t-h2 mt-5">O que esse sistema resolve</h2>
             </div>
-            <div className="rico text-[1.02rem]" dangerouslySetInnerHTML={{ __html: produto.descricao }} />
+            <div className="rico text-[1.02rem]" dangerouslySetInnerHTML={{ __html: sanitizarHtml(produto.descricao) }} />
           </div>
         </section>
       )}
@@ -172,7 +174,7 @@ export default async function ProdutoPage({ params }: { params: Promise<{ slug: 
               </div>
               <h2 className="t-h2 mt-5">Um dia de uso</h2>
             </div>
-            <div className="rico text-[1.02rem]" dangerouslySetInnerHTML={{ __html: produto.historia }} />
+            <div className="rico text-[1.02rem]" dangerouslySetInnerHTML={{ __html: sanitizarHtml(produto.historia) }} />
           </div>
         </section>
       )}
@@ -322,7 +324,7 @@ export default async function ProdutoPage({ params }: { params: Promise<{ slug: 
                   <div className="flex items-center justify-between">
                     <span
                       className="rounded-md px-2 py-1 font-mono text-[0.64rem] tracking-[0.14em]"
-                      style={{ background: `${alvo.cor || '#FF7A2F'}1f`, color: alvo.cor || 'var(--sf-acento)' }}
+                      style={{ background: `${alvo.cor || '#FF7A2F'}1f`, color: corLegivel(alvo.cor, { tinta: 0.12 }) ?? 'var(--sf-acento)' }}
                     >
                       {alvo.sigla || alvo.nome.slice(0, 3).toUpperCase()}
                     </span>
@@ -354,7 +356,7 @@ export default async function ProdutoPage({ params }: { params: Promise<{ slug: 
                   <div className="flex items-center justify-between">
                     <span
                       className="rounded-md px-2 py-1 font-mono text-[0.64rem] tracking-[0.14em]"
-                      style={{ background: `${p.cor || '#FF7A2F'}1f`, color: p.cor || 'var(--sf-acento)' }}
+                      style={{ background: `${p.cor || '#FF7A2F'}1f`, color: corLegivel(p.cor, { tinta: 0.12 }) ?? 'var(--sf-acento)' }}
                     >
                       {p.sigla || p.nome.slice(0, 3).toUpperCase()}
                     </span>
@@ -381,7 +383,7 @@ export default async function ProdutoPage({ params }: { params: Promise<{ slug: 
             {/* Sem artigo: o nome vem do cadastro e nao tem genero gravado. Com "o" fixo
                 sai "o Gestao de Agua", "o Comanda", "o Minha Agua". */}
             <h2 className="t-h2 mx-auto max-w-[24ch]">Quer ver {produto.nome} rodando?</h2>
-            <p className="mx-auto mt-4 max-w-xl text-[1rem] opacity-75">
+            <p className="mx-auto mt-4 max-w-xl text-[1rem] opacity-90">
               A demonstração é feita por quem construiu o sistema — com o seu cenário, não com dados fictícios.
             </p>
             <Link href="/contato" className="btn btn-escuro mt-8">
