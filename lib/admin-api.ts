@@ -2,6 +2,7 @@ import { chavePublica, tokenValido, urlSupabase } from './admin-auth';
 import { ErroBanco, listarMidias, rest } from './admin-dados';
 import { bool, ErroApi, idDaRota, inteiro, normalizarDadosBloco, texto } from './normalizar';
 import { sanitizarHtml } from './sanitize';
+import { corSegura, medidaSegura } from './tema-css';
 import { tipoBloco } from './blocos';
 import { TEMA_PADRAO } from './cms-padroes';
 import { FONTES_CORPO, FONTES_DISPLAY } from '@/app/fontes';
@@ -245,10 +246,8 @@ async function configSalvar(b: Entrada) {
   return { ok: true };
 }
 
-const COR = /^(#[0-9a-fA-F]{3,8}|rgba?\([\d.,\s%]+\))$/;
-const MEDIDA = /^\d{1,4}(px|rem|%)$/;
-const cor = (v: unknown, p: string) => (typeof v === 'string' && COR.test(v.trim()) ? v.trim() : p);
-const medida = (v: unknown, p: string) => (typeof v === 'string' && MEDIDA.test(v.trim()) ? v.trim() : p);
+const cor = corSegura;
+const medida = medidaSegura;
 const fonte = (v: unknown, ok: string[], p: string) => (typeof v === 'string' && ok.includes(v) ? v : p);
 
 async function temaSalvar(b: Entrada) {

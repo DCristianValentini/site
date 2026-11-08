@@ -49,10 +49,19 @@ function limparStyle(valor: string): string {
       if (!CSS_OK.has(prop)) return '';
       // corta url(), expression(), etc.
       if (/url\s*\(|expression|javascript:/i.test(val)) return '';
+      // Valor do editor e cor, tamanho, peso: nunca tem aspas, < >, & nem barra invertida. Aspas
+      // fecham o atributo style="..." e injetam outro (onmouseover=...); a barra invertida escreve
+      // "url(" em CSS sem a palavra url ("\75rl(") e passa pelo filtro acima.
+      if (/["'<>&\\]/.test(val)) return '';
       return `${prop}: ${val}`;
     })
     .filter(Boolean)
     .join('; ');
+}
+
+/** Valor de atributo que sempre fica DENTRO das aspas duplas em que e emitido. */
+function escAttr(v: string): string {
+  return v.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 function limparHref(valor: string): string | null {
@@ -90,16 +99,16 @@ export function sanitizarHtml(entrada: string | null | undefined): string {
       if (!permitidos.has(chave)) continue;
       if (chave === 'style') {
         const st = limparStyle(valor);
-        if (st) attrs.push(`style="${st}"`);
+        if (st) attrs.push(`style="${escAttr(st)}"`);
       } else if (chave === 'href') {
         const h = limparHref(valor);
-        if (h) attrs.push(`href="${h.replace(/"/g, '&quot;')}"`);
+        if (h) attrs.push(`href="${escAttr(h)}"`);
       } else if (chave === 'target') {
         if (valor === '_blank') attrs.push('target="_blank"', 'rel="noopener noreferrer"');
       } else if (chave === 'rel') {
         continue; // ja tratado junto do target
       } else {
-        attrs.push(`${chave}="${valor.replace(/"/g, '&quot;')}"`);
+        attrs.push(`${chave}="${escAttr(valor)}"`);
       }
     }
     return `<${nome}${attrs.length ? ' ' + attrs.join(' ') : ''}>`;

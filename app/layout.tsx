@@ -3,6 +3,8 @@ import './globals.css';
 import { classesFonte, varFonte } from './fontes';
 import { getConfig, getTema } from '@/lib/cms';
 import { urlMidia } from '@/lib/cms';
+import { TEMA_PADRAO } from '@/lib/cms-padroes';
+import { corSegura, cssDeVariaveis, medidaSegura } from '@/lib/tema-css';
 
 /**
  * Layout raiz. Le o tema do banco e injeta as variaveis CSS — e assim que o
@@ -34,23 +36,26 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const tema = await getTema();
 
+  // Cada valor passa pela mesma regra do /admin (ver lib/tema-css.ts): o banco aceita qualquer texto, e este
+  // valor vai para dentro de um <style>.
+  const p = TEMA_PADRAO;
   const vars: Record<string, string> = {
-    '--sf-fundo': tema.cor_fundo,
-    '--sf-superficie': tema.cor_superficie,
-    '--sf-superficie-2': tema.cor_superficie_2,
-    '--sf-texto': tema.cor_texto,
-    '--sf-texto-suave': tema.cor_texto_suave,
-    '--sf-acento': tema.cor_acento,
-    '--sf-acento-texto': tema.cor_acento_texto,
-    '--sf-acento-2': tema.cor_acento_2,
-    '--sf-linha': tema.cor_linha,
-    '--sf-raio': tema.raio,
-    '--sf-largura': tema.largura,
+    '--sf-fundo': corSegura(tema.cor_fundo, p.cor_fundo),
+    '--sf-superficie': corSegura(tema.cor_superficie, p.cor_superficie),
+    '--sf-superficie-2': corSegura(tema.cor_superficie_2, p.cor_superficie_2),
+    '--sf-texto': corSegura(tema.cor_texto, p.cor_texto),
+    '--sf-texto-suave': corSegura(tema.cor_texto_suave, p.cor_texto_suave),
+    '--sf-acento': corSegura(tema.cor_acento, p.cor_acento),
+    '--sf-acento-texto': corSegura(tema.cor_acento_texto, p.cor_acento_texto),
+    '--sf-acento-2': corSegura(tema.cor_acento_2, p.cor_acento_2),
+    '--sf-linha': corSegura(tema.cor_linha, p.cor_linha),
+    '--sf-raio': medidaSegura(tema.raio, p.raio),
+    '--sf-largura': medidaSegura(tema.largura, p.largura),
     '--sf-fonte-display': varFonte(tema.fonte_display, 'Bricolage Grotesque'),
     '--sf-fonte-corpo': varFonte(tema.fonte_corpo, 'Instrument Sans'),
     '--fonte-mono': 'var(--f-mono)',
   };
-  const css = `:root{${Object.entries(vars).map(([k, v]) => `${k}:${v}`).join(';')}}`;
+  const css = cssDeVariaveis(vars);
 
   return (
     <html lang="pt-BR" className={classesFonte}>
