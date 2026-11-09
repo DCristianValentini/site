@@ -1,10 +1,10 @@
-import { descricaoSeo, tituloSeo } from '@/lib/seo';
+import { descricaoSeo, orcamentoTitulo, tituloSeo } from '@/lib/seo';
 import { corLegivel } from '@/lib/cor-legivel';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, ArrowRight, ArrowUpRight, Check } from 'lucide-react';
-import { getProduto, getProdutos, urlMidia } from '@/lib/cms';
+import { getConfig, getProduto, getProdutos, urlMidia } from '@/lib/cms';
 import { htmlParaTexto, sanitizarHtml } from '@/lib/sanitize';
 import { GaleriaTelas } from '@/components/site/galeria-telas';
 
@@ -25,8 +25,9 @@ export async function generateMetadata({
   const p = await getProduto(slug);
   if (!p) return {};
   const desc = descricaoSeo(p.seo_descricao || p.resumo || htmlParaTexto(p.descricao, 300));
+  const { identidade } = await getConfig();
   return {
-    title: tituloSeo({ seoTitulo: p.seo_titulo, nome: p.nome, complemento: p.tagline ?? p.categoria }),
+    title: tituloSeo({ seoTitulo: p.seo_titulo, nome: p.nome, complemento: p.tagline ?? p.categoria }, orcamentoTitulo(identidade.nome)),
     description: desc,
     alternates: { canonical: `/produtos/${p.slug}` },
     openGraph: {
@@ -86,7 +87,7 @@ export default async function ProdutoPage({ params }: { params: Promise<{ slug: 
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <span
               className="rounded-md px-2.5 py-1.5 font-mono text-[0.7rem] font-medium tracking-[0.16em]"
-              style={{ background: `${cor}22`, color: cor }}
+              style={{ background: `${cor}22`, color: corLegivel(cor, { tinta: 0.14 }) ?? cor }}
             >
               {produto.sigla || produto.nome.slice(0, 3).toUpperCase()}
             </span>
@@ -383,7 +384,7 @@ export default async function ProdutoPage({ params }: { params: Promise<{ slug: 
             {/* Sem artigo: o nome vem do cadastro e nao tem genero gravado. Com "o" fixo
                 sai "o Gestao de Agua", "o Comanda", "o Minha Agua". */}
             <h2 className="t-h2 mx-auto max-w-[24ch]">Quer ver {produto.nome} rodando?</h2>
-            <p className="mx-auto mt-4 max-w-xl text-[1rem] opacity-90">
+            <p className="mx-auto mt-4 max-w-xl text-[1rem]">
               A demonstração é feita por quem construiu o sistema — com o seu cenário, não com dados fictícios.
             </p>
             <Link href="/contato" className="btn btn-escuro mt-8">

@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { getBlocos, getConfig, getPagina, getPlanos, getProdutos } from '@/lib/cms';
 import { urlMidia } from '@/lib/cms';
 import { RenderBlocos } from './blocos';
-import { descricaoSeo, tituloSeo } from '@/lib/seo';
+import { descricaoSeo, orcamentoTitulo, tituloSeo } from '@/lib/seo';
 
 /**
  * Renderiza uma pagina do CMS pelo slug. As rotas fixas do site (/, /sobre,
@@ -37,8 +37,9 @@ export async function metadataCms(slug: string): Promise<Metadata> {
   const pagina = await getPagina(slug);
   if (!pagina) return {};
   const imagem = urlMidia(pagina.seo_imagem);
+  const { identidade } = await getConfig();
   return {
-    title: tituloSeo({ seoTitulo: pagina.seo_titulo, nome: pagina.titulo }),
+    title: tituloSeo({ seoTitulo: pagina.seo_titulo, nome: pagina.titulo }, orcamentoTitulo(identidade.nome)),
     description: descricaoSeo(pagina.seo_descricao) || undefined,
     alternates: { canonical: slug === 'home' ? '/' : `/${slug}` },
     openGraph: {

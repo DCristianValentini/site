@@ -1,7 +1,7 @@
 // Rodar: node --test test/   (Node 22+ le TypeScript direto)
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { descricaoSeo, tituloSeo, MAX_DESCRICAO, MAX_TITULO } from '../lib/seo.ts';
+import { descricaoSeo, orcamentoTitulo, tituloSeo, MAX_DESCRICAO, MAX_TITULO } from '../lib/seo.ts';
 
 test('titulo curto e mantido como o CMS definiu', () => {
   assert.equal(tituloSeo({ seoTitulo: 'ERP Comercial para a sua empresa', nome: 'ERP' }), 'ERP Comercial para a sua empresa');
@@ -48,4 +48,21 @@ test('vazio nao quebra', () => {
   assert.equal(descricaoSeo(null), '');
   assert.equal(descricaoSeo(undefined), '');
   assert.equal(tituloSeo({ nome: '' }), '');
+});
+
+test('o orcamento do titulo desconta o sufixo " · <nome do site>" que o layout acrescenta', () => {
+  assert.equal(orcamentoTitulo('Sua Empresa'), 70 - 3 - 'Sua Empresa'.length);
+  assert.equal(orcamentoTitulo(null), 67);
+  assert.equal(orcamentoTitulo('x'.repeat(200)), 20, 'nome de site gigante nao zera o titulo da pagina');
+});
+
+test('caso real: "Comanda — chamada longa" + sufixo do site fica dentro de 70 caracteres', () => {
+  const site = 'Girando Sol Sistemas';
+  const nome = 'Comanda';
+  const tagline = 'Mesa, pedido e cozinha no mesmo ritmo do salao e do caixa, do primeiro cafe ao ultimo chopp.';
+  const titulo = tituloSeo({ nome, complemento: tagline }, orcamentoTitulo(site));
+  assert.ok(`${titulo} · ${site}`.length <= 70, `${titulo} · ${site}`.length + ' caracteres');
+  // sem o orcamento (limite fixo de 65) o mesmo caso estourava
+  const antigo = tituloSeo({ nome, complemento: 'Mesa, pedido e cozinha no mesmo ritmo do salao' });
+  assert.ok(`${antigo} · ${site}`.length > 70);
 });

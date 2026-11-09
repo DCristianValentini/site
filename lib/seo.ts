@@ -10,6 +10,14 @@ export const MAX_DESCRICAO = 160;
 
 const limpo = (v: string | null | undefined) => String(v ?? '').replace(/\s+/g, ' ').trim();
 
+/**
+ * Quantos caracteres sobram para o titulo da PAGINA depois do sufixo que o layout acrescenta (` · <nome do site>`).
+ * O limite do buscador vale para o titulo FINAL: limitar so a parte da pagina deixava "Comanda — <chamada> · <site>" em 78.
+ */
+export function orcamentoTitulo(nomeSite: string | null | undefined, total = 70): number {
+  return Math.max(20, total - ' · '.length - limpo(nomeSite).length);
+}
+
 /** Primeira forma do titulo que cabe em `max`; se nenhuma couber, corta a ultima na palavra. */
 export function tituloSeo(
   { seoTitulo, nome, complemento }: { seoTitulo?: string | null; nome: string; complemento?: string | null },
