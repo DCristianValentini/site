@@ -30,7 +30,7 @@ Para simular o Pages de projeto: `SITE_BASE_PATH=/site npm run build`.
 
 ## Testes
 ```bash
-npm test          # 47 testes, sem navegador (Node 22+ le TypeScript direto)
+npm test          # testes sem navegador (inclui test/planos.test.mts) (Node 22+ le TypeScript direto)
 npm run typecheck
 ```
 - `test/sanitize.test.mts` — o HTML do editor rico vai para o site público; ataca o sanitizador com payloads
@@ -38,6 +38,8 @@ npm run typecheck
   invariantes sobre a saída. Também prova que ele é idempotente: roda ao salvar **e** ao renderizar.
 - `test/cms-motor.test.mts` — `normalizar`, catálogo de blocos, tema → CSS e a ligação entre o catálogo
   (`lib/blocos.ts`) e o renderizador (`components/site/blocos.tsx`): tipo sem renderizador faz a página sumir.
+- `test/planos.test.mts` — planos por produto: agrupamento, aba inicial (`?produto=`, `#plano-`), teclado das abas,
+  link do botão (`/contato?interesse=`) e leitura do `?interesse=` no formulário.
 - `test/seo.test.mts`, `test/cor-legivel.test.mts` — título/descrição no limite do buscador e contraste da
   cor de produto.
 - `test/rls.test.mjs` — **black-box contra o banco real**, com a chave pública que o site já embute: prova o
@@ -57,6 +59,7 @@ python -I e2e/responsividade.py --base http://localhost:3010 --paginas "$P" --se
 python -I e2e/contraste.py      --base http://localhost:3010 --paginas "$P" --sem-login   # WCAG 4,5:1
 python -I e2e/acessibilidade.py --base http://localhost:3010 --paginas "$P" --sem-login --axe node_modules/axe-core/axe.min.js
 python -I e2e/seo.py            --base http://localhost:3010 --paginas "$P" [--estrito]   # lang, title, h1, canonical, og, links, sitemap
+python -I e2e/planos.py         --base http://localhost:3010   # /planos por produto: sem JS, abas, teclado, ?produto=, ?interesse=, sem preco numerico (serve tambem para o site no ar)
 ```
 `seo.py` acusa também **texto de exemplo esquecido no conteúdo** (e-mail `@exemplo.com.br`, `(00) 0000-0000`,
 `Cidade / UF`, lorem ipsum): o site vai ao ar com o que estiver no banco. É aviso; `--estrito` reprova.

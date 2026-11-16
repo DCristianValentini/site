@@ -282,6 +282,12 @@ export const TIPOS_BLOCO: TipoBloco[] = [
       cTitulo,
       cSubtitulo,
       { chave: 'nota', label: 'Observação abaixo dos planos', tipo: 'textarea', largo: true },
+      {
+        chave: 'produto',
+        label: 'Mostrar só os planos deste produto (slug)',
+        tipo: 'texto',
+        ajuda: 'Vazio = todos os produtos, agrupados, com seletor. Ex.: erp.',
+      },
     ],
     padroes: {},
   },

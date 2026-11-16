@@ -132,12 +132,20 @@ async function planoCriar(b: Entrada) {
 async function planoSalvar(id: number, b: Entrada) {
   const nome = texto(b.nome, 80);
   if (!nome) throw new ErroApi('Informe o nome do plano.', 422);
+  // Produto do plano: vazio = plano geral; senao tem de ser o slug de um produto que existe (sem FK no banco,
+  // entao a conferencia e feita aqui). Formato antes de consultar: nada estranho vai para a URL do PostgREST.
+  const produtoSlug = texto(b.produto_slug, 80);
+  if (produtoSlug) {
+    if (!/^[a-z0-9][a-z0-9-]*$/i.test(produtoSlug)) throw new ErroApi('Produto inválido.', 422);
+    const existe = await rest<unknown[]>('produtos', { consulta: `select=id&slug=eq.${encodeURIComponent(produtoSlug)}&limit=1` });
+    if (!existe.length) throw new ErroApi('Esse produto não existe.', 422);
+  }
   await rest('planos', {
     metodo: 'PATCH', consulta: `id=eq.${id}`,
     corpo: {
       nome, descricao: texto(b.descricao, 300), preco: texto(b.preco, 40), periodo: texto(b.periodo, 40),
       observacao: texto(b.observacao, 200), cta_texto: texto(b.cta_texto, 60), cta_url: texto(b.cta_url, 255),
-      destaque: bool(b.destaque), ativo: bool(b.ativo),
+      produto_slug: produtoSlug, destaque: bool(b.destaque), ativo: bool(b.ativo),
     },
   });
   if (Array.isArray(b.itens)) {

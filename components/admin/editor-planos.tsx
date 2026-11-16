@@ -3,45 +3,58 @@
 import { useState } from 'react';
 import { Plus, Save } from 'lucide-react';
 import type { Campo } from '@/lib/blocos';
-import type { Dados, Plano } from '@/lib/tipos';
+import type { Dados, Plano, Produto } from '@/lib/tipos';
 import { cli, msgErro } from '@/lib/cliente';
 import { Aviso, Botao, BotaoExcluir, Cartao, Entrada, Modal } from './ui';
 import { CamposEditor } from './campo-editor';
 
-const CAMPOS: Campo[] = [
-  { chave: 'nome', label: 'Nome do plano', tipo: 'texto' },
-  { chave: 'preco', label: 'Preço', tipo: 'texto', ajuda: 'Texto livre: "R$ 490", "Sob consulta", "A partir de R$ 300".' },
-  { chave: 'periodo', label: 'Período', tipo: 'texto', ajuda: 'Ex.: por mês, por usuário/mês.' },
-  { chave: 'descricao', label: 'Descrição curta', tipo: 'textarea', largo: true },
-  { chave: 'cta_texto', label: 'Botão — texto', tipo: 'texto' },
-  { chave: 'cta_url', label: 'Botão — link', tipo: 'texto' },
-  { chave: 'observacao', label: 'Observação abaixo do botão', tipo: 'texto', largo: true },
-  { chave: 'destaque', label: 'Destacar (selo "mais escolhido")', tipo: 'bool' },
-  { chave: 'ativo', label: 'Ativo (aparece no site)', tipo: 'bool' },
-  {
-    chave: 'itens',
-    label: 'O que está incluído',
-    tipo: 'lista',
-    itemLabel: 'Item',
-    largo: true,
-    ajuda: 'Desmarque "Incluído" para mostrar o item riscado (não faz parte do plano).',
-    itemCampos: [
-      { chave: 'texto', label: 'Texto', tipo: 'texto', largo: true },
-      { chave: 'incluso', label: 'Incluído', tipo: 'bool' },
-    ],
-  },
-];
+function camposDoPlano(produtos: Pick<Produto, 'slug' | 'nome' | 'ativo'>[]): Campo[] {
+  return [
+    { chave: 'nome', label: 'Nome do plano', tipo: 'texto' },
+    {
+      chave: 'produto_slug',
+      label: 'Produto',
+      tipo: 'select',
+      ajuda: 'A página /planos agrupa os planos por produto. Sem produto, o plano aparece em "Planos gerais".',
+      opcoes: [
+        { valor: '', label: 'Plano geral (sem produto)' },
+        ...produtos.map((p) => ({ valor: p.slug, label: p.ativo ? p.nome : `${p.nome} (inativo)` })),
+      ],
+    },
+    { chave: 'preco', label: 'Preço', tipo: 'texto', ajuda: 'Texto livre: "R$ 490", "Sob consulta", "A partir de R$ 300".' },
+    { chave: 'periodo', label: 'Período', tipo: 'texto', ajuda: 'Ex.: por mês, por usuário/mês.' },
+    { chave: 'descricao', label: 'Descrição curta', tipo: 'textarea', largo: true },
+    { chave: 'cta_texto', label: 'Botão — texto', tipo: 'texto' },
+    { chave: 'cta_url', label: 'Botão — link', tipo: 'texto', ajuda: 'Vazio ou /contato = leva ao formulário já com o produto escolhido.' },
+    { chave: 'observacao', label: 'Observação abaixo do botão', tipo: 'texto', largo: true },
+    { chave: 'destaque', label: 'Destacar (selo "mais escolhido")', tipo: 'bool' },
+    { chave: 'ativo', label: 'Ativo (aparece no site)', tipo: 'bool' },
+    {
+      chave: 'itens',
+      label: 'O que está incluído',
+      tipo: 'lista',
+      itemLabel: 'Item',
+      largo: true,
+      ajuda: 'Desmarque "Incluído" para mostrar o item riscado (não faz parte do plano).',
+      itemCampos: [
+        { chave: 'texto', label: 'Texto', tipo: 'texto', largo: true },
+        { chave: 'incluso', label: 'Incluído', tipo: 'bool' },
+      ],
+    },
+  ];
+}
 
 function paraDados(p: Plano): Dados {
   return {
-    nome: p.nome, preco: p.preco ?? '', periodo: p.periodo ?? '', descricao: p.descricao ?? '',
+    nome: p.nome, produto_slug: p.produto_slug ?? '', preco: p.preco ?? '', periodo: p.periodo ?? '', descricao: p.descricao ?? '',
     cta_texto: p.cta_texto ?? '', cta_url: p.cta_url ?? '', observacao: p.observacao ?? '',
     destaque: !!p.destaque, ativo: !!p.ativo,
     itens: (p.itens ?? []).map((i) => ({ texto: i.texto, incluso: !!i.incluso })),
   };
 }
 
-export function EditorPlanos({ iniciais }: { iniciais: Plano[] }) {
+export function EditorPlanos({ iniciais, produtos }: { iniciais: Plano[]; produtos: Pick<Produto, 'slug' | 'nome' | 'ativo'>[] }) {
+  const CAMPOS = camposDoPlano(produtos);
   const [planos, setPlanos] = useState(iniciais);
   const [sel, setSel] = useState<number | null>(iniciais[0]?.id ?? null);
   const [dados, setDados] = useState<Dados>(iniciais[0] ? paraDados(iniciais[0]) : {});
@@ -153,7 +166,7 @@ export function EditorPlanos({ iniciais }: { iniciais: Plano[] }) {
                 {p.nome} {p.destaque ? '★' : ''}
               </span>
               <span className="block text-[0.76rem] text-adm-suave">
-                {p.preco} {p.periodo}
+                {p.produto_slug ? `${produtos.find((x) => x.slug === p.produto_slug)?.nome ?? p.produto_slug} · ` : ''}{p.preco} {p.periodo}
               </span>
             </button>
           ))}

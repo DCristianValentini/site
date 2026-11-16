@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
+import { interessePorSlug } from '@/lib/planos';
 
 /** Formulario publico. Grava em `leads` (visivel no /admin/leads). */
 export function FormContato({
@@ -14,6 +15,13 @@ export function FormContato({
   const [enviando, setEnviando] = useState(false);
   const [pronto, setPronto] = useState(false);
   const [erro, setErro] = useState('');
+  const interesse = useRef<HTMLSelectElement>(null);
+
+  // /contato?interesse=<slug> (botao "Pedir proposta" dos planos) pre-seleciona o produto no campo "Interesse".
+  useEffect(() => {
+    const nome = interessePorSlug(window.location.search, produtos);
+    if (nome && interesse.current && [...interesse.current.options].some((o) => o.value === nome)) interesse.current.value = nome;
+  }, [produtos]);
 
   async function enviar(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -114,7 +122,7 @@ export function FormContato({
           <label className={rotulo} htmlFor="interesse">
             Interesse
           </label>
-          <select id="interesse" name="interesse" className={campo} style={{ borderColor: 'var(--sf-linha)', background: 'var(--sf-superficie)' }} defaultValue="">
+          <select id="interesse" name="interesse" ref={interesse} className={campo} style={{ borderColor: 'var(--sf-linha)', background: 'var(--sf-superficie)' }} defaultValue="">
             <option value="">Não sei ainda / quero orientação</option>
             {produtos.map((p) => (
               <option key={p.slug} value={p.nome}>

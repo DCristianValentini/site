@@ -368,6 +368,12 @@ body {
   color: #9ba1b0;
 }
 
+.aba-plano:focus-visible,
+.aba-plano-painel a:focus-visible {
+  outline: 2px solid var(--sf-acento);
+  outline-offset: 3px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

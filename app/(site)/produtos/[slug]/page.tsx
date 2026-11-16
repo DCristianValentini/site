@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, ArrowRight, ArrowUpRight, Check } from 'lucide-react';
-import { getConfig, getProduto, getProdutos, urlMidia } from '@/lib/cms';
+import { getConfig, getPlanos, getProduto, getProdutos, urlMidia } from '@/lib/cms';
 import { htmlParaTexto, sanitizarHtml } from '@/lib/sanitize';
 import { GaleriaTelas } from '@/components/site/galeria-telas';
 
@@ -43,7 +43,8 @@ export default async function ProdutoPage({ params }: { params: Promise<{ slug: 
   const produto = await getProduto(slug);
   if (!produto || !produto.ativo) notFound();
 
-  const todos = await getProdutos();
+  const [todos, planos] = await Promise.all([getProdutos(), getPlanos()]);
+  const temPlano = planos.some((pl) => pl.produto_slug === produto.slug);
   // "outros sistemas": os da mesma area (suite) ou da mesma linha, sem despejar o catalogo inteiro
   const ehPacote = produto.slug.startsWith('pacote-');
   const parentes = todos.filter(
@@ -118,7 +119,7 @@ export default async function ProdutoPage({ params }: { params: Promise<{ slug: 
             <Link href="/contato" className="btn btn-acento">
               Pedir demonstração <ArrowRight size={15} />
             </Link>
-            <Link href="/planos" className="btn btn-linha">
+            <Link href={temPlano ? `/planos?produto=${produto.slug}` : '/planos'} className="btn btn-linha">
               Ver planos
             </Link>
           </div>

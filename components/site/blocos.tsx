@@ -10,6 +10,8 @@ import type { Bloco, ConfigSite, Dados, Plano, Produto } from '@/lib/tipos';
 import { urlMidia } from '@/lib/cms';
 import { FormContato } from './form-contato';
 import { GaleriaTelas } from './galeria-telas';
+import { SeletorPlanos } from './seletor-planos';
+import { agruparPlanos, hrefCta, idGrupo } from '@/lib/planos';
 
 /**
  * Renderizador dos blocos do CMS. O mapa `RENDER` liga o `tipo` gravado no banco
@@ -472,78 +474,144 @@ function Depoimentos({ d }: { d: Dados }) {
   );
 }
 
-function Planos({ d, planos }: { d: Dados; planos: Plano[] }) {
-  if (!planos.length) return null;
+type NivelTitulo = 'h2' | 'h3' | 'h4';
+
+function CartaoPlano({ p, H, unico }: { p: Plano; H: NivelTitulo; unico: boolean }) {
+  return (
+    <div
+      className="card relative flex flex-col p-7"
+      style={
+        p.destaque
+          ? { borderColor: 'var(--sf-acento)', background: 'var(--sf-superficie-2)' }
+          : undefined
+      }
+    >
+      {/* ternario, nao `&&`: destaque vem do MySQL como 0/1 e `{0 && ...}`
+          faria o React imprimir o literal "0" na tela. */}
+      {p.destaque ? (
+        <span
+          className="absolute -top-3 left-7 rounded-full px-3 py-1 font-mono text-[0.64rem] font-semibold tracking-[0.14em]"
+          style={{ background: 'var(--sf-acento)', color: 'var(--sf-acento-texto)' }}
+        >
+          MAIS ESCOLHIDO
+        </span>
+      ) : null}
+      <H className="t-h3">{p.nome}</H>
+      {p.descricao && (
+        <p className="mt-2 text-[0.9rem] leading-relaxed" style={{ color: 'var(--sf-texto-suave)' }}>
+          {p.descricao}
+        </p>
+      )}
+      <div className="mt-6 flex items-end gap-2 border-y py-5" style={{ borderColor: 'var(--sf-linha)' }}>
+        <span className="num-display text-[2.1rem] font-bold leading-none">{p.preco}</span>
+        {p.periodo && (
+          <span className="pb-1 text-[0.82rem]" style={{ color: 'var(--sf-texto-suave)' }}>
+            {p.periodo}
+          </span>
+        )}
+      </div>
+      <ul className="mt-6 flex-1 space-y-3">
+        {(p.itens ?? []).map((it) => (
+          <li key={it.id} className="flex items-start gap-2.5 text-[0.9rem]">
+            {it.incluso ? (
+              <Check size={15} className="mt-0.5 shrink-0" style={{ color: 'var(--sf-acento-2)' }} />
+            ) : (
+              <Minus size={15} className="mt-0.5 shrink-0 opacity-40" />
+            )}
+            <span style={{ color: it.incluso ? 'var(--sf-texto)' : 'var(--sf-texto-suave)', opacity: it.incluso ? 1 : 0.85 }}>
+              {it.incluso ? null : <span className="sr-only">Não incluído: </span>}
+              {it.texto}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <Link
+        href={hrefCta(p)}
+        className={`btn mt-7 w-full ${p.destaque || unico ? 'btn-acento' : 'btn-linha'}`}
+      >
+        {p.cta_texto || 'Pedir proposta'}
+      </Link>
+      {p.observacao && (
+        <p className="mt-3 text-center text-[0.76rem]" style={{ color: 'var(--sf-texto-suave)' }}>
+          {p.observacao}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** Grade de planos de UM produto: 1 plano fica centralizado e estreito, 2 em duas colunas, 3 ou mais em tres. */
+function GradePlanos({ planos, H }: { planos: Plano[]; H: NivelTitulo }) {
+  const n = planos.length;
+  const colunas = n === 1 ? 'mx-auto max-w-xl' : n === 2 ? 'mx-auto max-w-4xl md:grid-cols-2' : 'lg:grid-cols-3';
+  return (
+    <div className={`grid items-start gap-5 ${colunas}`}>
+      {planos.map((p) => (
+        <CartaoPlano key={p.id} p={p} H={H} unico={n === 1} />
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Bloco "Planos". Sem filtro, mostra TODOS os planos agrupados por produto (um grupo por produto, com titulo e ancora)
+ * e, havendo mais de um grupo, o seletor por produto (melhoria progressiva: ver seletor-planos.tsx). Com `produto`
+ * (slug) no bloco, mostra so os planos daquele produto, sem seletor (usado na home, onde mora o ERP).
+ */
+function Planos({ d, planos, produtos }: { d: Dados; planos: Plano[]; produtos: Produto[] }) {
+  const filtro = s(d, 'produto').trim().toLowerCase();
+  const todos = agruparPlanos(planos, produtos);
+  const grupos = filtro ? todos.filter((g) => g.slug === filtro) : todos;
+  if (!grupos.length) return null;
+
+  const base = nivelItem(d); // h3 quando o bloco tem titulo de secao (h2), senao h2
+  const nivelPlano: NivelTitulo = grupos.length > 1 ? (base === 'h2' ? 'h3' : 'h4') : base;
+  const nota = s(d, 'nota');
+
   return (
     <section className="secao" style={{ background: 'var(--sf-superficie)' }}>
       <div className="limite">
         <CabecalhoSecao eyebrow={s(d, 'eyebrow')} titulo={s(d, 'titulo')} subtitulo={s(d, 'subtitulo')} centro />
-        <div className="mt-12 grid items-start gap-5 lg:grid-cols-3">
-          {planos.map((p) => (
-            <div
-              key={p.id}
-              className="card relative flex flex-col p-7"
-              style={
-                p.destaque
-                  ? { borderColor: 'var(--sf-acento)', background: 'var(--sf-superficie-2)' }
-                  : undefined
-              }
-            >
-              {/* ternario, nao `&&`: destaque vem do MySQL como 0/1 e `{0 && ...}`
-                  faria o React imprimir o literal "0" na tela. */}
-              {p.destaque ? (
-                <span
-                  className="absolute -top-3 left-7 rounded-full px-3 py-1 font-mono text-[0.64rem] font-semibold tracking-[0.14em]"
-                  style={{ background: 'var(--sf-acento)', color: 'var(--sf-acento-texto)' }}
-                >
-                  MAIS ESCOLHIDO
-                </span>
-              ) : null}
-              {(() => { const H = nivelItem(d); return <H className="t-h3">{p.nome}</H>; })()}
-              {p.descricao && (
-                <p className="mt-2 text-[0.9rem] leading-relaxed" style={{ color: 'var(--sf-texto-suave)' }}>
-                  {p.descricao}
-                </p>
-              )}
-              <div className="mt-6 flex items-end gap-2 border-y py-5" style={{ borderColor: 'var(--sf-linha)' }}>
-                <span className="num-display text-[2.1rem] font-bold leading-none">{p.preco}</span>
-                {p.periodo && (
-                  <span className="pb-1 text-[0.82rem]" style={{ color: 'var(--sf-texto-suave)' }}>
-                    {p.periodo}
-                  </span>
-                )}
-              </div>
-              <ul className="mt-6 flex-1 space-y-3">
-                {(p.itens ?? []).map((it) => (
-                  <li key={it.id} className="flex items-start gap-2.5 text-[0.9rem]">
-                    {it.incluso ? (
-                      <Check size={15} className="mt-0.5 shrink-0" style={{ color: 'var(--sf-acento-2)' }} />
-                    ) : (
-                      <Minus size={15} className="mt-0.5 shrink-0 opacity-40" />
-                    )}
-                    <span style={{ color: it.incluso ? 'var(--sf-texto)' : 'var(--sf-texto-suave)', opacity: it.incluso ? 1 : 0.85 }}>
-                      {it.texto}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href={p.cta_url || '/contato'}
-                className={`btn mt-7 w-full ${p.destaque ? 'btn-acento' : 'btn-linha'}`}
-              >
-                {p.cta_texto || 'Pedir proposta'}
-              </Link>
-              {p.observacao && (
-                <p className="mt-3 text-center text-[0.76rem]" style={{ color: 'var(--sf-texto-suave)' }}>
-                  {p.observacao}
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
-        {s(d, 'nota') && (
+        {grupos.length === 1 ? (
+          <div className="mt-12">
+            <GradePlanos planos={grupos[0].planos} H={nivelPlano} />
+            {filtro && todos.length > 1 ? (
+              <p className="mt-8 text-center text-[0.9rem]">
+                <Link href="/planos" className="inline-flex min-h-[44px] items-center gap-1.5 font-medium underline underline-offset-4">
+                  Ver os planos de todos os produtos <ArrowRight size={14} />
+                </Link>
+              </p>
+            ) : null}
+          </div>
+        ) : (
+          <SeletorPlanos itens={grupos.map((g) => ({ id: idGrupo(g), nome: g.nome }))}>
+            {grupos.map((g) => {
+              const produto = produtos.find((p) => p.slug === g.slug);
+              const Titulo = base;
+              return (
+                <div key={idGrupo(g)}>
+                  <div className="mx-auto mb-8 max-w-2xl text-center">
+                    <Titulo className="t-h2">{g.nome}</Titulo>
+                    {produto?.tagline ? (
+                      <p className="mt-3 text-[0.98rem]" style={{ color: 'var(--sf-texto-suave)' }}>
+                        {produto.tagline}
+                      </p>
+                    ) : null}
+                    {g.slug ? (
+                      <Link href={`/produtos/${g.slug}`} className="mt-2 inline-flex min-h-[44px] items-center gap-1.5 text-[0.9rem] font-medium underline underline-offset-4">
+                        Conhecer {g.nome} <ArrowRight size={14} />
+                      </Link>
+                    ) : null}
+                  </div>
+                  <GradePlanos planos={g.planos} H={nivelPlano} />
+                </div>
+              );
+            })}
+          </SeletorPlanos>
+        )}
+        {nota && (
           <p className="mx-auto mt-8 max-w-2xl text-center text-[0.86rem]" style={{ color: 'var(--sf-texto-suave)' }}>
-            {s(d, 'nota')}
+            {nota}
           </p>
         )}
       </div>
@@ -772,7 +840,7 @@ export function RenderBlocos({
           case 'depoimentos':
             return <Depoimentos key={bl.id} d={d} />;
           case 'planos':
-            return <Planos key={bl.id} d={d} planos={planos} />;
+            return <Planos key={bl.id} d={d} planos={planos} produtos={produtos} />;
           case 'faq':
             return <Faq key={bl.id} d={d} />;
           case 'logos':

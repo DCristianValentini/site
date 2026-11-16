@@ -151,6 +151,8 @@ export interface Plano {
   destaque: number;
   ativo: number;
   ordem: number;
+  /** slug do produto a que o plano pertence (public.produtos.slug); null = plano geral */
+  produto_slug?: string | null;
   itens?: PlanoItem[];
 }
 
