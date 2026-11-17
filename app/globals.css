@@ -368,8 +368,91 @@ body {
   color: #9ba1b0;
 }
 
-.aba-plano:focus-visible,
-.aba-plano-painel a:focus-visible {
+/* ---- Carrossel de planos por produto (components/site/seletor-planos.tsx) ---- */
+.carrossel-faixa {
+  display: flex;
+  align-items: flex-start;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  transition: height 0.3s ease;
+}
+.carrossel-faixa::-webkit-scrollbar {
+  display: none;
+}
+.carrossel-slide {
+  flex: 0 0 100%;
+  min-width: 0;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  padding: 6px 8px 28px;
+  transition: opacity 0.3s ease;
+}
+.carrossel-slide[data-ativo='nao'] {
+  opacity: 0.25;
+}
+.carrossel-seta {
+  display: inline-flex;
+  min-height: 44px;
+  min-width: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1px solid var(--sf-linha);
+  border-radius: 999px;
+  padding: 0 0.85rem;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--sf-texto);
+  background: transparent;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+.carrossel-seta:hover:not(:disabled) {
+  border-color: var(--sf-acento);
+  background: color-mix(in srgb, var(--sf-acento) 12%, transparent);
+}
+.carrossel-seta:disabled {
+  opacity: 0.4;
+}
+.carrossel-seta-nome {
+  display: none;
+  max-width: 9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (min-width: 900px) {
+  .carrossel-seta-nome {
+    display: inline;
+  }
+}
+.carrossel-ponto {
+  display: inline-grid;
+  height: 44px;
+  width: 26px;
+  place-items: center;
+  background: transparent;
+}
+.carrossel-ponto-marca {
+  display: block;
+  height: 8px;
+  width: 8px;
+  border-radius: 999px;
+  background: var(--sf-linha);
+  transition: width 0.25s ease, background-color 0.25s ease;
+}
+.carrossel-ponto:hover .carrossel-ponto-marca {
+  background: var(--sf-texto-suave);
+}
+.carrossel-ponto-marca[data-ativo='sim'] {
+  width: 22px;
+  background: var(--sf-acento);
+}
+.carrossel-seta:focus-visible,
+.carrossel-ponto:focus-visible,
+.carrossel-slide a:focus-visible {
   outline: 2px solid var(--sf-acento);
   outline-offset: 3px;
 }

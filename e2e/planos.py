@@ -1,4 +1,4 @@
-"""Planos por produto em /planos: HTML sem JavaScript, seletor (abas), teclado, URL, botao "Pedir proposta" e formulario de contato.
+"""Planos por produto em /planos: HTML sem JavaScript, carrossel, teclado, URL, botao "Pedir proposta" e formulario de contato.
 
 Tambem serve de verificacao do site NO AR depois de publicar:
   python -I e2e/planos.py --base https://dcristianvalentini.github.io/site [--esperado erp=3,comanda=1,...]
@@ -21,6 +21,16 @@ def conferir(cond, msg):
     else:
         falhas.append(msg)
         print("  FALHA:", msg)
+
+
+def no_viewport(pg, seletor):
+    """True se o elemento esta (ao menos em parte) dentro da area visivel da faixa do carrossel."""
+    return pg.evaluate(
+        """(sel) => { const f = document.querySelector('.carrossel-faixa'); const e = document.querySelector(sel);
+        if (!f || !e) return false; const a = f.getBoundingClientRect(), r = e.getBoundingClientRect();
+        return r.left < a.right - 8 && r.right > a.left + 8; }""",
+        seletor,
+    )
 
 
 def main():
@@ -46,7 +56,7 @@ def main():
             n = pg.locator(f"#plano-{s} .card").count()
             conferir(n == esperado[s], f"sem JS: {s} tem {n} plano(s), esperado {esperado[s]}")
         conferir(pg.locator("main .card").count() >= total, f"sem JS: menos de {total} cartoes de plano")
-        conferir(pg.locator('[role="tablist"]').count() == 0, "sem JS: nao deveria haver abas")
+        conferir(pg.locator('[aria-roledescription="carrossel"]').count() == 0, "sem JS: nao deveria haver carrossel")
         conferir(pg.locator("h1").count() == 1, f"sem JS: {pg.locator('h1').count()} h1")
         texto = pg.locator("main").inner_text()
         conferir(not re.search(r"R\$\s*\d", texto), "nenhum preco numerico (R$ ...) deve aparecer em /planos")
@@ -58,41 +68,59 @@ def main():
             conferir(any(h and re.fullmatch(rf"/(site/)?contato/?\?interesse={s}", h) for h in propostas), f"botao com ?interesse={s} ausente")
         ctx.close()
 
-        # ---------- 2) COM JavaScript: abas
+        # ---------- 2) COM JavaScript: carrossel
         for w, h in ((360, 740), (1440, 900), (2560, 1200)):
             ctx = b.new_context(viewport={"width": w, "height": h})
             pg = ctx.new_page()
             pg.goto(f"{base}/planos/", wait_until="load")
-            pg.wait_for_selector('[role="tablist"]', timeout=15000)
-            abas = pg.locator('[role="tab"]')
-            conferir(abas.count() == len(slugs), f"{w}px: {abas.count()} abas, esperado {len(slugs)}")
-            conferir(pg.locator('[role="tab"][aria-selected="true"]').count() == 1, f"{w}px: deveria haver 1 aba selecionada")
-            conferir(pg.locator("#aba-plano-erp").get_attribute("aria-selected") == "true", f"{w}px: aba inicial deveria ser o ERP")
-            visiveis = pg.locator('[role="tabpanel"]:not([hidden])')
-            conferir(visiveis.count() == 1, f"{w}px: {visiveis.count()} paineis visiveis")
-            conferir(pg.locator("#plano-erp .card:visible").count() == 3, f"{w}px: o ERP deveria mostrar 3 planos")
+            pg.wait_for_selector('[aria-roledescription="carrossel"]', timeout=15000)
+            pontos = pg.locator("[data-ponto]")
+            conferir(pontos.count() == len(slugs), f"{w}px: {pontos.count()} pontos, esperado {len(slugs)}")
+            conferir(pg.locator('[data-ponto][aria-current="true"]').count() == 1, f"{w}px: deveria haver 1 ponto atual")
+            conferir(pg.locator("#ponto-plano-erp").get_attribute("aria-current") == "true", f"{w}px: slide inicial deveria ser o ERP")
+            conferir(pg.locator('[aria-roledescription="slide"][data-ativo="sim"]').count() == 1, f"{w}px: deveria haver 1 slide ativo")
+            conferir(pg.locator('[aria-roledescription="slide"][inert]').count() == len(slugs) - 1, f"{w}px: so o slide ativo deveria aceitar foco")
+            conferir(pg.locator("#plano-erp .card").count() == 3, f"{w}px: o ERP deveria mostrar 3 planos")
+            conferir(no_viewport(pg, "#plano-erp"), f"{w}px: o slide do ERP deveria estar dentro da faixa visivel")
             sh = pg.evaluate("document.documentElement.scrollWidth - document.documentElement.clientWidth")
             conferir(sh <= 0, f"{w}px: rolagem horizontal de {sh}px")
-            peq = pg.locator('[role="tab"]').evaluate_all("els => els.filter(e => { const r = e.getBoundingClientRect(); return r.height < 44 || r.width < 44; }).length")
-            conferir(peq == 0, f"{w}px: {peq} aba(s) com alvo menor que 44px")
+            peq = pg.locator(".carrossel-seta, [data-ponto]").evaluate_all("els => els.filter(e => { const r = e.getBoundingClientRect(); return r.height < 44 || r.width < 24; }).length")
+            conferir(peq == 0, f"{w}px: {peq} controle(s) com alvo pequeno demais")
             if w == 1440:
-                # teclado: seta direita passa para a proxima aba, atualiza URL e painel; Home/End; volta circular
-                pg.locator("#aba-plano-erp").focus()
-                pg.keyboard.press("ArrowRight")
-                conferir(pg.evaluate("document.activeElement.id") == f"aba-plano-{slugs[1]}", "ArrowRight deveria focar a 2a aba")
+                # setas: proxima / anterior (circular), URL e slide ativo acompanham
+                pg.get_by_role("button", name=re.compile(r"^Pr.ximo produto")).click()
+                pg.wait_for_timeout(700)
+                conferir(pg.locator(f"#ponto-plano-{slugs[1]}").get_attribute("aria-current") == "true", "seta seguinte deveria ir ao 2o produto")
                 conferir(f"produto={slugs[1]}" in pg.url, f"URL deveria ter ?produto={slugs[1]} (url: {pg.url})")
-                conferir(pg.locator(f"#plano-{slugs[1]}").is_visible() and not pg.locator("#plano-erp").is_visible(), "painel deveria trocar")
-                conferir(pg.locator('[role="tab"][tabindex="0"]').count() == 1, "so a aba ativa entra no Tab")
-                pg.keyboard.press("End")
-                conferir(pg.evaluate("document.activeElement.id") == f"aba-plano-{slugs[-1]}", "End deveria ir para a ultima aba")
+                conferir(no_viewport(pg, f"#plano-{slugs[1]}") and not no_viewport(pg, "#plano-erp"), "a faixa deveria rolar ate o 2o slide")
+                conferir(pg.locator(f"#plano-{slugs[1]}").get_attribute("inert") is None, "slide ativo nao pode ficar inert")
+                pg.get_by_role("button", name=re.compile(r"^Produto anterior")).click()
+                pg.get_by_role("button", name=re.compile(r"^Produto anterior")).click()
+                pg.wait_for_timeout(900)
+                conferir(pg.locator(f"#ponto-plano-{slugs[-1]}").get_attribute("aria-current") == "true", "seta anterior no 1o deveria dar a volta para o ultimo")
+                # pontos e teclado
+                pg.locator("#ponto-plano-erp").click()
+                pg.wait_for_timeout(900)
+                conferir(pg.locator("#ponto-plano-erp").get_attribute("aria-current") == "true", "clique no ponto do ERP")
                 pg.keyboard.press("ArrowRight")
-                conferir(pg.evaluate("document.activeElement.id") == "aba-plano-erp", "ArrowRight na ultima deveria dar a volta")
-                pg.keyboard.press("ArrowLeft")
-                conferir(pg.evaluate("document.activeElement.id") == f"aba-plano-{slugs[-1]}", "ArrowLeft no ERP deveria ir para a ultima")
+                pg.wait_for_timeout(700)
+                conferir(pg.evaluate("document.activeElement.id") == f"ponto-plano-{slugs[1]}", "ArrowRight no ponto deveria focar o proximo")
+                pg.keyboard.press("End")
+                pg.wait_for_timeout(900)
+                conferir(pg.evaluate("document.activeElement.id") == f"ponto-plano-{slugs[-1]}", "End deveria ir ao ultimo")
                 pg.keyboard.press("Home")
-                conferir(pg.evaluate("document.activeElement.id") == "aba-plano-erp", "Home deveria ir para a primeira")
+                pg.wait_for_timeout(900)
+                conferir(pg.evaluate("document.activeElement.id") == "ponto-plano-erp", "Home deveria ir ao primeiro")
+                conferir(pg.locator('[data-ponto][tabindex="0"]').count() == 1, "so o ponto atual entra no Tab")
                 foco = pg.evaluate("(() => { const s = getComputedStyle(document.activeElement); return [s.outlineStyle, s.outlineWidth]; })()")
-                conferir(foco[0] != "none" and foco[1] != "0px", f"foco visivel ausente na aba ({foco})")
+                conferir(foco[0] != "none" and foco[1] != "0px", f"foco visivel ausente no ponto ({foco})")
+                conferir("Pr" in (pg.locator("[aria-live=polite]").first.inner_text() + "Pr") and "de" in pg.locator("[aria-live=polite]").first.inner_text(), "anuncio do slide atual ausente")
+            if w == 360:
+                # arrastar com o dedo equivale a rolar a faixa: rolagem programatica deve atualizar o slide ativo
+                pg.wait_for_timeout(400)  # a posicao inicial ainda esta assentando
+                pg.evaluate("(() => { const f = document.querySelector('.carrossel-faixa'); f.scrollTo({ left: f.clientWidth * 2, behavior: 'instant' }); })()")
+                pg.wait_for_timeout(700)
+                conferir(pg.locator(f"#ponto-plano-{slugs[2]}").get_attribute("aria-current") == "true", "rolar a faixa deveria mudar o slide ativo")
             ctx.close()
 
         # ---------- 3) ?produto= e #plano-
@@ -102,22 +130,22 @@ def main():
             if slug not in esperado:
                 continue
             pg.goto(f"{base}/planos/?produto={slug}", wait_until="load")
-            pg.wait_for_selector('[role="tablist"]')
-            conferir(pg.locator(f"#aba-plano-{slug}").get_attribute("aria-selected") == "true", f"?produto={slug} deveria abrir a aba")
-            conferir(pg.locator(f"#plano-{slug} .card:visible").count() == esperado[slug], f"?produto={slug}: plano nao visivel")
+            pg.wait_for_selector('[aria-roledescription="carrossel"]')
+            conferir(pg.locator(f"#ponto-plano-{slug}").get_attribute("aria-current") == "true", f"?produto={slug} deveria abrir a aba")
+            conferir(pg.locator(f"#plano-{slug} .card").count() == esperado[slug], f"?produto={slug}: plano nao visivel")
         pg.goto(f"{base}/planos/?produto=nao-existe", wait_until="load")
-        pg.wait_for_selector('[role="tablist"]')
-        conferir(pg.locator("#aba-plano-erp").get_attribute("aria-selected") == "true", "produto desconhecido deveria cair no ERP")
+        pg.wait_for_selector('[aria-roledescription="carrossel"]')
+        conferir(pg.locator("#ponto-plano-erp").get_attribute("aria-current") == "true", "produto desconhecido deveria cair no ERP")
         pg.goto(f"{base}/planos/?produto=%3Cscript%3E", wait_until="load")
-        pg.wait_for_selector('[role="tablist"]')
-        conferir(pg.locator("#aba-plano-erp").get_attribute("aria-selected") == "true", "?produto malformado deveria cair no ERP")
+        pg.wait_for_selector('[aria-roledescription="carrossel"]')
+        conferir(pg.locator("#ponto-plano-erp").get_attribute("aria-current") == "true", "?produto malformado deveria cair no ERP")
         pg.goto(f"{base}/planos/#plano-escola", wait_until="load")
-        pg.wait_for_selector('[role="tablist"]')
-        conferir(pg.locator("#aba-plano-escola").get_attribute("aria-selected") == "true", "#plano-escola deveria abrir a aba")
+        pg.wait_for_selector('[aria-roledescription="carrossel"]')
+        conferir(pg.locator("#ponto-plano-escola").get_attribute("aria-current") == "true", "#plano-escola deveria abrir a aba")
 
         # ---------- 4) botao do plano -> /contato com o produto pre-selecionado
         pg.goto(f"{base}/planos/?produto=kanban", wait_until="load")
-        pg.wait_for_selector('[role="tablist"]')
+        pg.wait_for_selector('[aria-roledescription="carrossel"]')
         pg.locator("#plano-kanban a.btn").first.click()
         pg.wait_for_selector("#interesse")
         pg.wait_for_timeout(300)
@@ -133,8 +161,8 @@ def main():
         ctx = b.new_context(viewport={"width": 1280, "height": 900}, reduced_motion="reduce")
         pg = ctx.new_page()
         pg.goto(f"{base}/planos/?produto=igreja", wait_until="load")
-        pg.wait_for_selector('[role="tablist"]')
-        conferir(pg.locator("#plano-igreja .card:visible").count() == esperado.get("igreja", 1), "reduced-motion: painel da igreja")
+        pg.wait_for_selector('[aria-roledescription="carrossel"]')
+        conferir(pg.locator("#plano-igreja .card").count() == esperado.get("igreja", 1), "reduced-motion: painel da igreja")
         ctx.close()
         b.close()
 
